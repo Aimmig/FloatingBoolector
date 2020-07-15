@@ -4,3 +4,5 @@
 *.gz
 *.c
 __pycache__/*
+fbtor/__pycache__/
+fbtor/test/__pycache__/
