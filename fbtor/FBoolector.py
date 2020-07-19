@@ -324,8 +324,15 @@ class FBoolector(Boolector):
                 super().Sub(lower, super().Const(3, self.fptype.value[EXP] + 2)),
                 super().Sub(lower, super().Const(3, self.fptype.value[EXP] + 2))), super().Const(1)))
         
-        #TODO rounding
-        return var #fRound(var, guard, round, sticky)
+        varNaN = super().Or(
+            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
+            super().Or(
+                super().And(self.fInf(nodeA), self.fNull(nodeB)),
+                super().And(self.fInf(nodeB), self.fNull(nodeA)))
+        nan = self.fVar(self.FloatSort())
+        super().Assert(self.fNaN(nan))
+        
+        return super().Cond(varNaN, nan, var) #fRound(var, guard, round, sticky)
         
     def fDiv(self, nodeA, nodeB):
         return
