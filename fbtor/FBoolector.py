@@ -51,9 +51,6 @@ class FBoolector(Boolector):
         super().__init__()
         self.fptype = fptype
         self.rmode = rmode
-    
-    def floatSort(self):
-        return
 
     def FloatSort(self):
         #r = FloatSort(self)
@@ -239,7 +236,7 @@ class FBoolector(Boolector):
         #return self.fAdd(nodeA,neg_nodeB)
 
     def fMul(self, nodeA, nodeB):
-        var = self.fVar(FloatSort())
+        var = self.fVar(self.FloatSort())
         super().Assert(super().Eq(self.fSign(var), super().Xor(self.fSign(nodeA), self.fSign(nodeB))))
         
         man = super().Var(super().BitVecSort(2 * self.fptype.value[MAN] + 3))
