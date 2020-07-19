@@ -4,10 +4,13 @@ from pyboolector import _BoolectorBitVecSort, BoolectorBVNode, Boolector
 
 os.environ["BTORMODELGEN"] = "1"
 
+"""
 class FloatSort(_BoolectorBitVecSort):
     def __init__(self, fbtor):
         super().__init__(fbtor)
+"""
 
+"""
 class FloatNode(BoolectorBVNode):
     def __init__(self, fbtor):
         super().__init__(fbtor)
@@ -43,7 +46,7 @@ class FloatNode(BoolectorBVNode):
         return btor.fGte(self, node)
     def fLte(self, node):
         return btor.fLte(self, node)
-    
+"""
 
 class FBoolector(Boolector):
     
@@ -75,6 +78,7 @@ class FBoolector(Boolector):
     
     def fMantisse(self, node):
         return super().Slice(node, self.fptype.value[MAN]-1, 0)
+
     def fMantisseIm(self, node):
         return super().Cond(
             super().Eq(self.Const(0, self.fptype.value[EXP]), self.fExponent(node)),
@@ -88,18 +92,22 @@ class FBoolector(Boolector):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
             super().Not(super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN]))))
+
     def fInf(self, node):
         return super().Or(self.fPInf(node), self.fNInf(node))
+
     def fPInf(self, node):
         return super().And(
             super().Not(self.fSign(node)), super().And(
             super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])),
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP]))))
+
     def fNInf(self, node):
         return super().And(
             self.fSign(node), super().And(
             super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])),
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP]))))
+
     def fNull(self, node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
@@ -129,6 +137,7 @@ class FBoolector(Boolector):
             tres,
             super().Neg(tres))))
         return var
+
     def fConvert(self, node):
         var = self.fVar(FloatSort())
         super().Assert(super().Cond(
@@ -354,6 +363,7 @@ class FBoolector(Boolector):
 
     def fMulWR(self, nodeA, nodeB):
         return
+
     def fDivWR(self, nodeA, nodeB):
         return
 
@@ -366,6 +376,7 @@ class FBoolector(Boolector):
                 self.fInf(node),
                 node,
                 self.fRoundN(self, node, guard, round, sticky)))
+
     def fRoundN(self, node, guard, round, sticky):
         if self.rmode == RMode.to_zero:
             return node
@@ -413,6 +424,7 @@ class FBoolector(Boolector):
                 super().And(self.fNull(nodeA), self.fNull(nodeB)), #both number equals 0
                 super().Const(True),
                 super().Eq(nodeA, nodeB)))
+
     def fGt(self, nodeA, nodeB):
         return super().Cond(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)), #one number equals NaN
@@ -430,9 +442,12 @@ class FBoolector(Boolector):
                         self.fSign(nodeB),
                         super().Const(True),
                         super().Ugt(nodeA, nodeB)))))
+
     def fLt(self, nodeA, nodeB):
         return self.fGt(nodeB, nodeA)
+
     def fGte(self, nodeA, nodeB):
         return super().Or(self.fGt(nodeA, nodeB), self.fEq(nodeA, nodeB))
+
     def fLte(self, nodeA, nodeB):
         return super().Or(self.fLt(nodeA, nodeB), self.fEq(nodeA, nodeB))
