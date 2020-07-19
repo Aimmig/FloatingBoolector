@@ -1,28 +1,24 @@
 from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
-import pyboolector, os
-from pyboolector import _BoolectorBitVecSort, BoolectorBVNode, Boolector
+import os
+from pyboolector import _BoolectorBitVecSort, Boolector
 
 os.environ["BTORMODELGEN"] = "1"
 
 """
+
 class FloatSort(_BoolectorBitVecSort):
     def __init__(self, fbtor):
         super().__init__(fbtor)
-"""
 
-"""
 class FloatNode(BoolectorBVNode):
     def __init__(self, fbtor):
         super().__init__(fbtor)
-    
-    
     def fSign(self):
         return btor.fSign(self)
     def fMantisse(self, node):
         return btor.fMantisse(self)
     def fExponent(self, node):
         return btor.fExponent(self)
-    
     def fNaN(self):
         return btor.fNaN(self)
     def fNull(self):
@@ -31,11 +27,8 @@ class FloatNode(BoolectorBVNode):
         return btor.fInf(self)
     def fSubnormal(self):
         return btor.fSubnormal(self)
-    
     def fRound(self, guard, round, sticky):
         return btor.fRound(self, guard, round, sticky)
-                
-    
     def fEq(self, node):
         return btor.fEq(self, node)
     def fGt(self, node):
@@ -367,7 +360,10 @@ class FBoolector(Boolector):
     def fDivWR(self, nodeA, nodeB):
         return
 
-    #Comparing Operations
+# ---------------------------------------------------------------------------
+# Methods that handle rounding of the results
+# ---------------------------------------------------------------------------
+
     def fRound(self, node, guard, round, sticky): #TODO special cases
         return super().Cond(
             self.fNaN(node),
@@ -415,16 +411,42 @@ class FBoolector(Boolector):
                     sticky)),
                     node, #TODO add 1
                     node))
-    
+
+# ---------------------------------------------------------------------------
+# Methods for compare operators: Eq,Lt,Gt,etc....
+# ---------------------------------------------------------------------------
+
+    """
+    Checks the equality of 2 IEE Bitvectors
+
+    @type  nodeA: BoolectorBVNode
+    @param nodeA: first operand
+    @type  nodeB: BoolectorBVNode
+    @param nodeB: second operand
+    @rtype: BoolectorBVNode
+    @returns: bitvector of length 1
+    """
     def fEq(self, nodeA, nodeB):
         return super().Cond(
-            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)), #one number equals NaN
+            #one number equals NaN
+            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Const(False),
             super().Cond(
-                super().And(self.fNull(nodeA), self.fNull(nodeB)), #both number equals 0
+                #both number equals 0
+                super().And(self.fNull(nodeA), self.fNull(nodeB)),
                 super().Const(True),
                 super().Eq(nodeA, nodeB)))
 
+    """
+    Checks if one IEE bitvector is greater than the other
+
+    @type  nodeA: BoolectorBVNode
+    @param nodeA: first operand
+    @type  nodeB: BoolectorBVNode
+    @param nodeB: second operand
+    @rtype: BoolectorBVNode
+    @returns: bitvector of length 1
+    """
     def fGt(self, nodeA, nodeB):
         return super().Cond(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)), #one number equals NaN
@@ -443,11 +465,41 @@ class FBoolector(Boolector):
                         super().Const(True),
                         super().Ugt(nodeA, nodeB)))))
 
+    """
+    Checks if one IEE bitvector is less than the other
+
+    @type  nodeA: BoolectorBVNode
+    @param nodeA: first operand
+    @type  nodeB: BoolectorBVNode
+    @param nodeB: second operand
+    @rtype: BoolectorBVNode
+    @returns: bitvector of length 1
+    """
     def fLt(self, nodeA, nodeB):
         return self.fGt(nodeB, nodeA)
 
+    """
+    Checks if one IEE bitvector is greater or equal than the other
+
+    @type  nodeA: BoolectorBVNode
+    @param nodeA: first operand
+    @type  nodeB: BoolectorBVNode
+    @param nodeB: second operand
+    @rtype: BoolectorBVNode
+    @returns: bitvector of length 1
+    """
     def fGte(self, nodeA, nodeB):
         return super().Or(self.fGt(nodeA, nodeB), self.fEq(nodeA, nodeB))
 
+    """
+    Checks if one IEE bitvector is less or equal than the other
+
+    @type  nodeA: BoolectorBVNode
+    @param nodeA: first operand
+    @type  nodeB: BoolectorBVNode
+    @param nodeB: second operand
+    @rtype: BoolectorBVNode
+    @returns: bitvector of length 1
+    """
     def fLte(self, nodeA, nodeB):
         return super().Or(self.fLt(nodeA, nodeB), self.fEq(nodeA, nodeB))
