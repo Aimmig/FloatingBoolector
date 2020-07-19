@@ -72,15 +72,15 @@ class FBoolector(Boolector):
     
     def fSign(self, node):
         return super().Eq(node[:self.fptype.value[WIDTH]-1],super().Const(1,1))
-        #return super().Ugte(node, super().Const(2**(self.fptype.value[WIDTH]-1), self.fptype.value[WIDTH]))
     
     def fMantisse(self, node):
         return super().Slice(node, self.fptype.value[MAN]-1, 0)
     def fMantisseIm(self, node):
         return super().Cond(
             super().Eq(self.Const(0, self.fptype.value[EXP]), self.fExponent(node)),
-            super().Concat(Const(0, 1), self.fMantisse(node)),
-            super().Concat(Const(1, 1), self.fMantisse(node)))
+            super().Concat(self.Const(0, 1), self.fMantisse(node)),
+            super().Concat(self.Const(1, 1), self.fMantisse(node)))
+
     def fExponent(self, node):
         return super().Slice(node, self.fptype.value[EXP]+self.fptype.value[MAN]-1, self.fptype.value[MAN])
     
@@ -325,7 +325,7 @@ class FBoolector(Boolector):
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Or(
                 super().And(self.fInf(nodeA), self.fNull(nodeB)),
-                super().And(self.fInf(nodeB), self.fNull(nodeA)))
+                super().And(self.fInf(nodeB), self.fNull(nodeA))))
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         

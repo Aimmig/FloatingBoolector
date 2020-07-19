@@ -25,7 +25,7 @@ def _setup_(fptype, rmode):
 def prepare(fbtor, sort, const):
      variables = []
      for i in range(len(const)):
-        print(i)
+        #print(i)
         x = fbtor.Var(sort,str(i))
         fbtor.fAssert(fbtor.Eq, x,const[i])
         variables.append(x)
