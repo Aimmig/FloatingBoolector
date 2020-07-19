@@ -138,3 +138,10 @@ def test_fNeg(const, expected):
 # ----------------------------------------------------------------------------------
 # Here the real test begin now: arithmetic operators
 # ----------------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fMul)
+def test_fMul(x_const, y_const, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fMul)
+
