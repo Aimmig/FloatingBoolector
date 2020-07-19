@@ -253,7 +253,7 @@ class FBoolector(Boolector):
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
         eeB = super().Concat(super().Const(0, 2), self.fExponent(nodeB))
-        eeV = super().Concat(super().Var((super().BitVecSort(2)), eeV)
+        eeV = super().Concat(super().Var((super().BitVecSort(2)), eeV))
         
         super().Assert(super().Eq(eeV,
             super().Sub(
