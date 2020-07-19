@@ -2,6 +2,7 @@
 *.log
 *.pdf
 *.gz
+*.pyc
 *.c
 __pycache__/*
 fbtor/__pycache__/
