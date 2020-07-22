@@ -118,11 +118,27 @@ class FBoolector(Boolector):
     def fExponent(self, node):
         return super().Slice(node, self.fptype.value[EXP]+self.fptype.value[MAN]-1, self.fptype.value[MAN])
     
+    """
+    Checks if node represents NaN
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is NaN or not
+    """
     def fNaN(self, node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
             super().Not(super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN]))))
 
+    """
+    Checks if node represents infinity
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is infinity or not
+    """
     def fInf(self,node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
@@ -140,11 +156,27 @@ class FBoolector(Boolector):
             self.fSign(node),
             self.fInf(node))
 
+    """
+    Checks if node represents the number 0
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is 0
+    """
     def fNull(self, node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
             super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
 
+    """
+    Checks if node is a subnormal number
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is subnormal
+    """
     def fSubnormal(self,node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
@@ -203,6 +235,10 @@ class FBoolector(Boolector):
         
         return self.fRound(var, guard, round, sticky)
     
+    #TO-DO: the following functions might not be necessary ....
+    # ---------------------------------------------------------
+    # ---------------------------------------------------------
+
     # checks if a has the given property and returns b if so otherwise returns
     # value of the elseCondition
     def fPropElse(self, nodeA,nodeB, fProp, elseCond):
@@ -232,6 +268,8 @@ class FBoolector(Boolector):
                            elseCond
                      )
                 )
+    # ---------------------------------------------------------
+    # ---------------------------------------------------------
 
     def fNeg(self, node):
         var = self.fVar(self.FloatSort())
