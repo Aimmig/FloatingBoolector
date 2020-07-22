@@ -1,8 +1,5 @@
 from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
-import os
 from pyboolector import _BoolectorBitVecSort, Boolector
-
-os.environ["BTORMODELGEN"] = "1"
 
 """
 
