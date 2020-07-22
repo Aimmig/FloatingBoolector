@@ -2,6 +2,8 @@ from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
 import os
 from pyboolector import _BoolectorBitVecSort, Boolector
 
+import math
+
 os.environ["BTORMODELGEN"] = "1"
 
 """
@@ -74,7 +76,7 @@ class FBoolector(Boolector):
 
     def fMantisseIm(self, node):
         return super().Cond(
-            super().Eq(self.Const(0, self.fptype.value[EXP]), self.fExponent(node)),
+            self.fSubnormal(node),
             super().Concat(self.Const(0, 1), self.fMantisse(node)),
             super().Concat(self.Const(1, 1), self.fMantisse(node)))
 
@@ -246,20 +248,23 @@ class FBoolector(Boolector):
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeA)),
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeB)))))
         
-        log = super().Var(super().BitVecSort(self.fptype.value[EXP] + 2))
-        super().Assert(super().Eq(super().Const(1, self.fptype.value[EXP] + 2), super().Srl(man, log)))
+        bits = 2**round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0) - (2 * self.fptype.value[MAN] + 3)
+        
+        smlog = super().Var(super().BitVecSort(round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0)))
+        super().Assert(super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 3)), super().Srl(super().Concat(super().Const(0, bits), man), smlog)))
+        mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0)), smlog)
         
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
         eeB = super().Concat(super().Const(0, 2), self.fExponent(nodeB))
-        eeV = super().Concat(super().Var((super().BitVecSort(2)), eeV))
+        eeV = super().Concat(super().Var((super().BitVecSort(2))), eV)
         
         super().Assert(super().Eq(eeV,
             super().Sub(
                 super().Add(eeA, eeB),
                 super().Add(
                     super().Const(2**(self.fptype.value[EXP]-1)-1, self.fptype.value[EXP] + 2),
-                    super().Sub(log, super().Const(self.fptype.value[MAN], self.fptype.value[EXP] + 2))))))
+                    super().Sub(mlog, super().Const(self.fptype.value[MAN], self.fptype.value[EXP] + 2))))))
         
         over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
         under = super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2))
@@ -275,8 +280,8 @@ class FBoolector(Boolector):
         
         upper = super().Cond(
             under,
-            super().Add(super().Sub(log, super().Const(1, self.fptype.value[EXP] + 2)), eeV),
-            super().Sub(log, super().Const(1, self.fptype.value[EXP] + 2)))
+            super().Add(super().Sub(mlog, super().Const(1, self.fptype.value[EXP] + 2)), eeV),
+            super().Sub(mlog, super().Const(1, self.fptype.value[EXP] + 2)))
         lower = super().Sub(upper, super().Const(self.fptype.value[MAN], self.fptype.value[EXP] + 2))
         
         #Mantisse
@@ -310,7 +315,7 @@ class FBoolector(Boolector):
             super().Eq(super().Slice(man,
                 super().Sub(lower, super().Const(1, self.fptype.value[EXP] + 2)),
                 super().Sub(lower, super().Const(1, self.fptype.value[EXP] + 2))), super().Const(1)))
-        round = super().Cond(
+        roundb = super().Cond(
             super().Slt(lower, super().Const(2, self.fptype.value[EXP] + 2)),
             super().Const(False),
             super().Eq(super().Slice(man,
@@ -331,7 +336,7 @@ class FBoolector(Boolector):
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         
-        return super().Cond(varNaN, nan, var) #fRound(var, guard, round, sticky)
+        return super().Cond(varNaN, nan, var) #fRound(var, guard, roundb, sticky)
         
     def fDiv(self, nodeA, nodeB):
         return
