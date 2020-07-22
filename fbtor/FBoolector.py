@@ -1,7 +1,11 @@
 from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
 from pyboolector import _BoolectorBitVecSort, Boolector
 
+
+#TO-DO: Remove this code below
+
 """
+
 class FloatSort(_BoolectorBitVecSort):
     def __init__(self, fbtor):
         super().__init__(fbtor)
@@ -60,6 +64,7 @@ class FBoolector(Boolector):
     @rtype: BitVecSort
     @returns: the BitVecSort of appropriate length
     """
+    #TO-DO: Remove non working c btorapi-stuff ....
     def FloatSort(self):
         #r = FloatSort(self)
         #r._width = self.fptype.value[WIDTH]
@@ -76,6 +81,7 @@ class FBoolector(Boolector):
     @rtype: BoolectorBVNode
     @returns: a new boolector variable of the sort/symbol
     """
+    #TO-DO: Remove non working c btorapi-stuff ....
     def fVar(self, sort, symbol = None):
         #r = FloatNode(self)
         #r._sort = sort
@@ -119,9 +125,11 @@ class FBoolector(Boolector):
     @rtype: BoolectorBVNode
     @returns: a new BoolectorBVNode (length 1) that indicates the sign of the node
     """
+    #TO-DO: This is way to complicated ... should be the first bit ??
     def fSign(self, node):
         return super().Eq(node[:self.fptype.value[WIDTH]-1],super().Const(1,1))
-    
+        #return node[0]
+
     """
     Gets the mantisse of a node
 
