@@ -1,17 +1,20 @@
 from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
-import os
 from pyboolector import _BoolectorBitVecSort, Boolector
 
+<<<<<<< HEAD
 import math
 
 os.environ["BTORMODELGEN"] = "1"
+=======
+
+#TO-DO: Remove this code below
+>>>>>>> b0f12fefcc206591d34f7968a916f00f772f67ba
 
 """
 
 class FloatSort(_BoolectorBitVecSort):
     def __init__(self, fbtor):
         super().__init__(fbtor)
-
 class FloatNode(BoolectorBVNode):
     def __init__(self, fbtor):
         super().__init__(fbtor)
@@ -45,41 +48,127 @@ class FloatNode(BoolectorBVNode):
 
 class FBoolector(Boolector):
     
+    """
+    Creates an FBoolector object that extends Boolector object
+
+    @param fptype: the floating point type to use
+    @type fptype: FPType
+    @param rmode: the rounding mode to use
+    @type rmode: RMode
+    @rtype: FBoolector
+    @returns a new boolector object, that additionally holds fptype
+    """
     def __init__(self, fptype, rmode):
         super().__init__()
         self.fptype = fptype
         self.rmode = rmode
 
+    """
+    Create a BitVecSort of the corresponding length for the floating point type.
+    This 'sort' is used as a 'FloatSort'
+
+    @rtype: BitVecSort
+    @returns: the BitVecSort of appropriate length
+    """
+    #TO-DO: Remove non working c btorapi-stuff ....
     def FloatSort(self):
         #r = FloatSort(self)
         #r._width = self.fptype.value[WIDTH]
         #r._c_sort = btorapi.boolector_bitvec_sort(self._c_btor, width)
         return super().BitVecSort(self.fptype.value[WIDTH])
 
+    """
+    Create a boolector variable
+
+    @param sort: the boolector sort to use
+    @type sort: BitVecSort
+    @param symbol: optional symbol for the variable
+    @type symbol: str
+    @rtype: BoolectorBVNode
+    @returns: a new boolector variable of the sort/symbol
+    """
+    #TO-DO: Remove non working c btorapi-stuff ....
     def fVar(self, sort, symbol = None):
         #r = FloatNode(self)
         #r._sort = sort
         #r._c_node = btorapi.boolector_var(self._c_btor, sort._c_sort, _ChPtr(symbol)._c_str)
         return super().Var(sort, symbol)
 
+    """
+    Helper method to assert a property to a variable based on a binary function and a value.
+    E.g. asserts that var is equal/less/greater etc. than the given value
+
+    @param f: function that is applied to var,num
+    @type f: BoolectorBVNode x BoolectorBVNode -> BoolectorNode (length 1)
+    @param var: the variable that shall be asserted
+    @type var: BoolectorNode
+    @param num: number that is converted to BoolectorNode
+    @type num: str
+    @param debug: debug flag for conversion
+    @type debug: bool
+    """
     def fAssert(self, f, var, num: str, debug=False):
-        return super().Assert(f(var,self.fConst(num, debug)))
+        super().Assert(f(var,self.fConst(num, debug)))
     
+    """
+    Create a bitvector node from string. The rounding mode & floating point type from the FBoolector object are used
+
+    @param num: number to convert
+    @type num: str
+    @param debug: debug flag for conversion
+    @type debug: bool
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the IEE representation of the given number
+    """
     def fConst(self, num: str, debug: bool=False):
         return super().Const(BitVecConvStatic.convertToBinary(num, self.fptype, self.rmode, debug), self.fptype.value[WIDTH])
     
+    """
+    Gets the sign of a node
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode (length 1) that indicates the sign of the node
+    """
+    #TO-DO: This is way to complicated ... should be the first bit ??
     def fSign(self, node):
         return super().Eq(node[:self.fptype.value[WIDTH]-1],super().Const(1,1))
-    
+        #return node[0]
+
+    """
+    Gets the mantisse of a node
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the mantissa
+    """
     def fMantisse(self, node):
         return super().Slice(node, self.fptype.value[MAN]-1, 0)
 
+    """
+    Gets the mantisse including the sign bit of a node
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the sign bit and the mantisse
+    """
     def fMantisseIm(self, node):
         return super().Cond(
             self.fSubnormal(node),
             super().Concat(self.Const(0, 1), self.fMantisse(node)),
             super().Concat(self.Const(1, 1), self.fMantisse(node)))
 
+    """
+    Gets the exponent of a node
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the exponent
+    """
     def fExponent(self, node):
         return super().Slice(node, self.fptype.value[EXP]+self.fptype.value[MAN]-1, self.fptype.value[MAN])
     
@@ -454,10 +543,12 @@ class FBoolector(Boolector):
     """
     def fGt(self, nodeA, nodeB):
         return super().Cond(
-            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)), #one number equals NaN
+            #one number equals NaN
+            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Const(False),
             super().Cond(
-                super().And(self.fNull(nodeA), self.fNull(nodeB)), #both number equals 0
+                #both number equals 0
+                super().And(self.fNull(nodeA), self.fNull(nodeB)),
                 super().Const(False),
                 super().Cond(
                     self.fSign(nodeA),

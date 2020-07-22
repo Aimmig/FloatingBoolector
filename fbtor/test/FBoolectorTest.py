@@ -1,7 +1,7 @@
 from fbtor.BitVecConvert import BitVecConvStatic, WIDTH
 import pytest
 from fbtor.FBoolector import FBoolector
-from pyboolector import Boolector
+from pyboolector import Boolector, BTOR_OPT_MODEL_GEN
 from .test_set import *
 
 """ Test cases for the FBoolector implementation:
@@ -18,6 +18,7 @@ from .test_set import *
 # Setup boolector & sort object
 def _setup_(fptype, rmode):
      fbtor = FBoolector(fptype, rmode)
+     fbtor.Set_opt(BTOR_OPT_MODEL_GEN,1)
      sort = fbtor.BitVecSort(fbtor.fptype.value[WIDTH])
      return fbtor, sort
 
@@ -40,7 +41,7 @@ def AssertCompare(fbtor, expected):
      result = fbtor.Sat()
      if result == Boolector.SAT:
          print("Boolector.SAT")
-         fbtor.Print_model()
+         fbtor.Print_model(format="smt2")
      else:
          print("Boolector.UNSAT")
      assert result == expected
@@ -49,7 +50,7 @@ def AssertCompare(fbtor, expected):
 def AssertArithmetic(fbtor, result, expected):
      # arithmetic formula should aways be Boolector.SAT
      print(fbtor.Sat())
-     fbtor.Print_model()
+     fbtor.Print_model(format="smt2")
      # expected value is normal string
      if not len(expected) == (fbtor.fptype.value[WIDTH]):
         expected = BitVecConvStatic.convertToBinary(expected, fbtor.fptype, fbtor.rmode)
