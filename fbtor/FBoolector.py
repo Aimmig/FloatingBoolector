@@ -1,14 +1,7 @@
 from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
 from pyboolector import _BoolectorBitVecSort, Boolector
 
-<<<<<<< HEAD
 import math
-
-os.environ["BTORMODELGEN"] = "1"
-=======
-
-#TO-DO: Remove this code below
->>>>>>> b0f12fefcc206591d34f7968a916f00f772f67ba
 
 """
 
@@ -298,6 +291,10 @@ class FBoolector(Boolector):
             super().Eq(self.fSign(node), super().Not(self.fSign(var)))))
         return var
     
+    def nextPower2(self, number):
+        return 2**round(math.log(number, 2) + 0.5, 0)
+        
+    
     #Arithmetic Operations
     def fAdd(self, nodeA, nodeB):
         #TO-DO determine order of Nan, Inf, Null checks
@@ -337,7 +334,7 @@ class FBoolector(Boolector):
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeA)),
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeB)))))
         
-        bits = 2**round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0) - (2 * self.fptype.value[MAN] + 3)
+        bits = self.nextPower2(2 * self.fptype.value[MAN] + 3) - (2 * self.fptype.value[MAN] + 3)
         
         smlog = super().Var(super().BitVecSort(round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0)))
         super().Assert(super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 3)), super().Srl(super().Concat(super().Const(0, bits), man), smlog)))
@@ -353,7 +350,7 @@ class FBoolector(Boolector):
                 super().Add(eeA, eeB),
                 super().Add(
                     super().Const(2**(self.fptype.value[EXP]-1)-1, self.fptype.value[EXP] + 2),
-                    super().Sub(mlog, super().Const(self.fptype.value[MAN], self.fptype.value[EXP] + 2))))))
+                    super().Sub(super().Const(2 * self.fptype.value[MAN] + 0, self.fptype.value[EXP] + 2), mlog)))))
         
         over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
         under = super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2))
@@ -367,55 +364,43 @@ class FBoolector(Boolector):
                 super().Const(0, self.fptype.value[EXP]),
                 eV))))
         
-        upper = super().Cond(
+        smanbits = self.nextPower2(2 * self.fptype.value[MAN] + 3)
+        slog = super().Slice(mlog, math.log(smanbits, 2) - 1, 0)
+        undero = super().Cond(
             under,
-            super().Add(super().Sub(mlog, super().Const(1, self.fptype.value[EXP] + 2)), eeV),
-            super().Sub(mlog, super().Const(1, self.fptype.value[EXP] + 2)))
-        lower = super().Sub(upper, super().Const(self.fptype.value[MAN], self.fptype.value[EXP] + 2))
+            super().Slice(
+                super().Neg(eeV),
+                math.log(smanbits, 2) - 1,
+                0),
+            super().Const(0, math.log(smanbits, 2)))
+        shman = super().Slice(
+            super().Sll(
+                super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 3)), man),
+                super().Sub(
+                    super().Sub(super().Const(2 * self.fptype.value[MAN] + 2, math.log(smanbits, 2)), slog),
+                    undero)),
+            2 * self.fptype.value[MAN] + 2, 0)
         
         #Mantisse
         super().Assert(super().Eq(self.fMantisse(var), super().Cond(
             over,
             super().Const(0, self.fptype.value[MAN]),
-            super().Concat(
-                super().Slice(man,
-                    super().Cond(
-                        super().Slt(upper, super().Const(0, self.fptype.value[EXP] + 2)),
-                        super().Const(0, self.fptype.value[EXP] + 2),
-                        upper),
-                    super().Cond(
-                        super().Slt(lower, super().Const(0, self.fptype.value[EXP] + 2)),
-                        super().Const(0, self.fptype.value[EXP] + 2),
-                        lower)),
-                super().Slice( #Add zeros to fill mantisse
-                    super().Const(0, self.fptype.value[EXP] + 2),
-                    super().Cond(
-                        super().Slt(lower, super().Const(0, self.fptype.value[EXP] + 2)),
-                        super().Cond(
-                            super().Slt(upper, super().Const(0, self.fptype.value[EXP] + 2)),
-                            super().Sub(super().Neg(lower), super().Neg(upper)),
-                            super().Neg(lower)),
-                        super().Const(0, self.fptype.value[EXP] + 2)),
-                    super().Const(0, self.fptype.value[EXP] + 2))))))
+            super().Slice(shman, 2 * self.fptype.value[MAN] + 1, self.fptype.value[MAN] + 2))))
         
         guard = super().Cond(
-            super().Slt(lower, super().Const(1, self.fptype.value[EXP] + 2)),
+            over,
             super().Const(False),
-            super().Eq(super().Slice(man,
-                super().Sub(lower, super().Const(1, self.fptype.value[EXP] + 2)),
-                super().Sub(lower, super().Const(1, self.fptype.value[EXP] + 2))), super().Const(1)))
+            super().Slice(shman, self.fptype.value[MAN] + 1, self.fptype.value[MAN] + 1))
         roundb = super().Cond(
-            super().Slt(lower, super().Const(2, self.fptype.value[EXP] + 2)),
+            over,
             super().Const(False),
-            super().Eq(super().Slice(man,
-                super().Sub(lower, super().Const(2, self.fptype.value[EXP] + 2)),
-                super().Sub(lower, super().Const(2, self.fptype.value[EXP] + 2))), super().Const(1)))
+            super().Slice(shman, self.fptype.value[MAN], self.fptype.value[MAN]))
         sticky = super().Cond(
-            super().Slt(lower, super().Const(3, self.fptype.value[EXP] + 2)),
+            over,
             super().Const(False),
-            super().Eq(super().Slice(man,
-                super().Sub(lower, super().Const(3, self.fptype.value[EXP] + 2)),
-                super().Sub(lower, super().Const(3, self.fptype.value[EXP] + 2))), super().Const(1)))
+            super().Not(super().Eq(
+                super().Const(0, self.fptype.value[MAN]),
+                super().Slice(shman, self.fptype.value[MAN] - 1, 0))))
         
         varNaN = super().Or(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
