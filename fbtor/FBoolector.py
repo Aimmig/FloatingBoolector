@@ -3,42 +3,6 @@ from pyboolector import _BoolectorBitVecSort, Boolector
 
 import math
 
-"""
-
-class FloatSort(_BoolectorBitVecSort):
-    def __init__(self, fbtor):
-        super().__init__(fbtor)
-class FloatNode(BoolectorBVNode):
-    def __init__(self, fbtor):
-        super().__init__(fbtor)
-    def fSign(self):
-        return btor.fSign(self)
-    def fMantisse(self, node):
-        return btor.fMantisse(self)
-    def fExponent(self, node):
-        return btor.fExponent(self)
-    def fNaN(self):
-        return btor.fNaN(self)
-    def fNull(self):
-        return btor.fNull(self)
-    def fInf(self):
-        return btor.fInf(self)
-    def fSubnormal(self):
-        return btor.fSubnormal(self)
-    def fRound(self, guard, round, sticky):
-        return btor.fRound(self, guard, round, sticky)
-    def fEq(self, node):
-        return btor.fEq(self, node)
-    def fGt(self, node):
-        return btor.fGt(self, node)
-    def fLt(self, node):
-        return btor.fLt(self, node)
-    def fGte(self, node):
-        return btor.fGte(self, node)
-    def fLte(self, node):
-        return btor.fLte(self, node)
-"""
-
 class FBoolector(Boolector):
     
     """
@@ -63,11 +27,7 @@ class FBoolector(Boolector):
     @rtype: BitVecSort
     @returns: the BitVecSort of appropriate length
     """
-    #TO-DO: Remove non working c btorapi-stuff ....
     def FloatSort(self):
-        #r = FloatSort(self)
-        #r._width = self.fptype.value[WIDTH]
-        #r._c_sort = btorapi.boolector_bitvec_sort(self._c_btor, width)
         return super().BitVecSort(self.fptype.value[WIDTH])
 
     """
@@ -80,11 +40,7 @@ class FBoolector(Boolector):
     @rtype: BoolectorBVNode
     @returns: a new boolector variable of the sort/symbol
     """
-    #TO-DO: Remove non working c btorapi-stuff ....
     def fVar(self, sort, symbol = None):
-        #r = FloatNode(self)
-        #r._sort = sort
-        #r._c_node = btorapi.boolector_var(self._c_btor, sort._c_sort, _ChPtr(symbol)._c_str)
         return super().Var(sort, symbol)
 
     """
@@ -124,10 +80,8 @@ class FBoolector(Boolector):
     @rtype: BoolectorBVNode
     @returns: a new BoolectorBVNode (length 1) that indicates the sign of the node
     """
-    #TO-DO: This is way to complicated ... should be the first bit ??
     def fSign(self, node):
-        return super().Eq(node[:self.fptype.value[WIDTH]-1],super().Const(1,1))
-        #return node[0]
+        return super().Slice(node,self.fptype.value[WIDTH]-1,self.fptype.value[WIDTH]-1)
 
     """
     Gets the mantisse of a node
@@ -141,12 +95,12 @@ class FBoolector(Boolector):
         return super().Slice(node, self.fptype.value[MAN]-1, 0)
 
     """
-    Gets the mantisse including the sign bit of a node
+    Gets the mantisse including the implicit leading bit
 
     @param node: the node representing a floating point number
     @type node: BoolectorBVNode
     @rtype: BoolectorBVNode
-    @returns: a new BoolectorBVNode that contains the sign bit and the mantisse
+    @returns: new BoolectorBVNode with implicit leading bit & mantisse
     """
     def fMantisseIm(self, node):
         return super().Cond(
@@ -165,36 +119,65 @@ class FBoolector(Boolector):
     def fExponent(self, node):
         return super().Slice(node, self.fptype.value[EXP]+self.fptype.value[MAN]-1, self.fptype.value[MAN])
     
+    """
+    Checks if node represents NaN
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is NaN or not
+    """
     def fNaN(self, node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
             super().Not(super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN]))))
 
-    def fInf(self, node):
-        return super().Or(self.fPInf(node), self.fNInf(node))
+    """
+    Checks if node represents infinity
 
-    def fPInf(self, node):
-        return super().And(
-            super().Not(self.fSign(node)), super().And(
-            super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])),
-            super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP]))))
-
-    def fNInf(self, node):
-        return super().And(
-            self.fSign(node), super().And(
-            super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])),
-            super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP]))))
-
-    def fNull(self, node):
-        return super().And(
-            super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
-            super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
-
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is infinity or not
+    """
     def fInf(self,node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
             super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
 
+    #TO-DO: might not be necesary ..
+    def fPInf(self, node):
+        return super().And(
+            super().Not(self.fSign(node)),
+            self.fInf(node))
+
+    #TO-DO: migt not be neccassry ..
+    def fNInf(self, node):
+        return super().And(
+            self.fSign(node),
+            self.fInf(node))
+
+    """
+    Checks if node represents the number 0
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is 0
+    """
+    def fNull(self, node):
+        return super().And(
+            super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
+            super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
+
+    """
+    Checks if node is a subnormal number
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is subnormal
+    """
     def fSubnormal(self,node):
         return super().And(
             super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
@@ -253,6 +236,10 @@ class FBoolector(Boolector):
         
         return self.fRound(var, guard, round, sticky)
     
+    #TO-DO: the following functions might not be necessary ....
+    # ---------------------------------------------------------
+    # ---------------------------------------------------------
+
     # checks if a has the given property and returns b if so otherwise returns
     # value of the elseCondition
     def fPropElse(self, nodeA,nodeB, fProp, elseCond):
@@ -282,6 +269,8 @@ class FBoolector(Boolector):
                            elseCond
                      )
                 )
+    # ---------------------------------------------------------
+    # ---------------------------------------------------------
 
     def fNeg(self, node):
         var = self.fVar(self.FloatSort())
