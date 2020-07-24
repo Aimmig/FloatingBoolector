@@ -146,3 +146,8 @@ def test_fMul(x_const, y_const, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
     arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fMul)
 
+@pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fDiv)
+def test_fMul(x_const, y_const, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fDiv)
+

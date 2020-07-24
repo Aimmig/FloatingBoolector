@@ -323,11 +323,12 @@ class FBoolector(Boolector):
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeA)),
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeB)))))
         
-        bits = self.nextPower2(2 * self.fptype.value[MAN] + 3) - (2 * self.fptype.value[MAN] + 3)
+        abits = self.nextPower2(2 * self.fptype.value[MAN] + 3)
+        bits = abits - (2 * self.fptype.value[MAN] + 3)
         
-        smlog = super().Var(super().BitVecSort(round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0)))
+        smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 3)), super().Srl(super().Concat(super().Const(0, bits), man), smlog)))
-        mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - round(math.log(2 * self.fptype.value[MAN] + 3 - 0.5, 2), 0)), smlog)
+        mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
         
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
@@ -399,10 +400,117 @@ class FBoolector(Boolector):
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         
-        return super().Cond(varNaN, nan, var) #fRound(var, guard, roundb, sticky)
+        varInf = super().Or(
+            self.fInf(nodeA),
+            self.fInf(nodeB))
+        inf = self.fVar(self.FloatSort())
+        super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
+        super().Assert(self.fInf(inf))
+        
+        return super().Cond(varNaN, nan, super().Cond(varInf, inf, var)) #fRound(var, guard, roundb, sticky)
+        
+        
         
     def fDiv(self, nodeA, nodeB):
-        return
+        var = self.fVar(self.FloatSort())
+        super().Assert(super().Eq(self.fSign(var), super().Xor(self.fSign(nodeA), self.fSign(nodeB))))
+        
+        man = super().Var(super().BitVecSort(3 * self.fptype.value[MAN] + 4))
+        super().Assert(super().Eq(man, super().Udiv(
+            super().Concat(self.fMantisseIm(nodeA), super().Const(0, 2 * self.fptype.value[MAN] + 3)),
+            super().Concat(super().Const(0, 2 * self.fptype.value[MAN] + 3), self.fMantisseIm(nodeB)))))
+        
+        rem = super().Not(super().Eq(super().Const(0, 3 * self.fptype.value[MAN] + 4), super().Urem(
+            super().Concat(self.fMantisseIm(nodeA), super().Const(0, 2 * self.fptype.value[MAN] + 3)),
+            super().Concat(super().Const(0, 2 * self.fptype.value[MAN] + 3), self.fMantisseIm(nodeB)))))
+        
+        abits = self.nextPower2(3 * self.fptype.value[MAN] + 4)
+        bits = abits - (3 * self.fptype.value[MAN] + 4)
+        
+        smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
+        super().Assert(super().Eq(super().Const(1, abits), super().Srl(super().Concat(super().Const(0, bits), man), smlog)))
+        mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
+        
+        eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
+        eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
+        eeB = super().Concat(super().Const(0, 2), self.fExponent(nodeB))
+        eeV = super().Concat(super().Var((super().BitVecSort(2))), eV)
+        
+        super().Assert(super().Eq(eeV,
+            super().Add(
+                super().Sub(eeA, eeB),
+                super().Sub(
+                    super().Const(2**(self.fptype.value[EXP]-1)-1, self.fptype.value[EXP] + 2),
+                    super().Sub(super().Const(2 * self.fptype.value[MAN] + 3, self.fptype.value[EXP] + 2), mlog)))))
+        
+        over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
+        under = super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2))
+        
+        #Exponent
+        super().Assert(super().Eq(self.fExponent(var), super().Cond(
+            over,
+            super().Const(-1, self.fptype.value[EXP]),
+            super().Cond(
+                under,
+                super().Const(0, self.fptype.value[EXP]),
+                eV))))
+        
+        smanbits = self.nextPower2(3 * self.fptype.value[MAN] + 4)
+        slog = super().Slice(mlog, math.log(smanbits, 2) - 1, 0)
+        undero = super().Cond(
+            under,
+            super().Slice(
+                super().Neg(eeV),
+                math.log(smanbits, 2) - 1,
+                0),
+            super().Const(0, math.log(smanbits, 2)))
+        shman = super().Slice(
+            super().Sll(
+                super().Concat(super().Const(0, smanbits - (3 * self.fptype.value[MAN] + 4)), man),
+                super().Sub(
+                    super().Sub(super().Const(3 * self.fptype.value[MAN] + 3, math.log(smanbits, 2)), slog),
+                    undero)),
+            3 * self.fptype.value[MAN] + 3, 0)
+        
+        #Mantisse
+        super().Assert(super().Eq(self.fMantisse(var), super().Cond(
+            over,
+            super().Const(0, self.fptype.value[MAN]),
+            super().Slice(shman, 3 * self.fptype.value[MAN] + 2, 2 * self.fptype.value[MAN] + 3))))
+        
+        guard = super().Cond(
+            over,
+            super().Const(False),
+            super().Slice(shman, 2 * self.fptype.value[MAN] + 2, 2 * self.fptype.value[MAN] + 2))
+        roundb = super().Cond(
+            over,
+            super().Const(False),
+            super().Slice(shman, 2 * self.fptype.value[MAN] + 1, 2 * self.fptype.value[MAN] + 1))
+        sticky = super().Cond(
+            over,
+            super().Const(False),
+            super().Or(
+                super().Not(super().Eq(
+                    super().Const(0, 2 * self.fptype.value[MAN] + 1),
+                    super().Slice(shman, 2 * self.fptype.value[MAN], 0))),
+                rem))
+        
+        varNaN = super().Or(
+            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
+            super().Or(
+                super().And(self.fInf(nodeA), self.fNull(nodeB)),
+                super().And(self.fInf(nodeB), self.fNull(nodeA))))
+        nan = self.fVar(self.FloatSort())
+        super().Assert(self.fNaN(nan))
+        
+        varInf = super().Or(
+            self.fInf(nodeA),
+            self.fInf(nodeB))
+        inf = self.fVar(self.FloatSort())
+        super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
+        super().Assert(self.fInf(inf))
+        
+        return super().Cond(varNaN, nan, super().Cond(varInf, inf, var)) #fRound(var, guard, roundb, sticky)
     
     #Without rounding
     def fAddWR(self, nodeA, nodeB):
