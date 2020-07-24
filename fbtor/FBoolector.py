@@ -286,33 +286,13 @@ class FBoolector(Boolector):
     
     #Arithmetic Operations
     def fAdd(self, nodeA, nodeB):
-        #TO-DO determine order of Nan, Inf, Null checks
-        #return fNanElse(nodeA, nodeB,
-        #                fInfElse(nodeA, nodeB,
-        #                         fNullElse(nodeA,nodeB,
-        #                                  nodeA
-        #                                  #TO-DO Cond(.....
-        #                                   #)
-        #                         )
-        #                )
-        #       )
-        var = self.fVar(super().BitVecSort(self.fptype.value[EXP]))
-        #super().Cond(super().Eq(self.fSign(nodeA),self.fSign(nodeB)),
-        super().Assert(super().Eq(var,super().Sub(self.fExponent(nodeA),self.fExponent(nodeB))))
-        newExp = self.fVar(super().BitVecSort(self.fptype.value[EXP]))
-        super().Assert(super().Eq(newExp, super().Add(super().Const(2**(self.fptype.value[EXP]-1)-1,self.fptype.value[EXP]),var)
-                                 )
-                      )
-                                 #)
-                    #)
-        return newExp 
+         return nodeA
 
     def fSub(self, nodeA, nodeB):
         # create and assert new var to -nodeB
         neg_nodeB = self.fNeg(nodeB)
         # redirect a-b to a+(-b)
-        return neg_nodeB
-        #return self.fAdd(nodeA,neg_nodeB)
+        return self.fAdd(nodeA,neg_nodeB)
 
     def fMul(self, nodeA, nodeB):
         var = self.fVar(self.FloatSort())
@@ -407,7 +387,12 @@ class FBoolector(Boolector):
         super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
         super().Assert(self.fInf(inf))
         
-        return super().Cond(varNaN, nan, super().Cond(varInf, inf, var)) #fRound(var, guard, roundb, sticky)
+        varNull = super().Or(
+            self.fNull(nodeA),
+            self.fNull(nodeB))
+        null = self.fVar(self.FloatSort())
+        
+        return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, var))) #fRound(var, guard, roundb, sticky)
         
         
         
@@ -498,19 +483,24 @@ class FBoolector(Boolector):
         varNaN = super().Or(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Or(
-                super().And(self.fInf(nodeA), self.fNull(nodeB)),
-                super().And(self.fInf(nodeB), self.fNull(nodeA))))
+                super().And(self.fInf(nodeA), self.fInf(nodeB)),
+                super().And(self.fNull(nodeA), self.fNull(nodeB))))
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         
         varInf = super().Or(
             self.fInf(nodeA),
-            self.fInf(nodeB))
+            self.fNull(nodeB))
         inf = self.fVar(self.FloatSort())
         super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
         super().Assert(self.fInf(inf))
         
-        return super().Cond(varNaN, nan, super().Cond(varInf, inf, var)) #fRound(var, guard, roundb, sticky)
+        varNull = super().Or(
+            self.fNull(nodeA),
+            self.fInf(nodeB))
+        null = self.fVar(self.FloatSort())
+        
+        return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, var))) #fRound(var, guard, roundb, sticky)
     
     #Without rounding
     def fAddWR(self, nodeA, nodeB):
