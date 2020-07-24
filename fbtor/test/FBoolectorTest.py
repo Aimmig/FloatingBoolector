@@ -141,13 +141,23 @@ def test_fNeg(const, expected):
 # ----------------------------------------------------------------------------------
 
 
+@pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fAdd)
+def test_fAdd(x_const, y_const, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fAdd)
+    
+@pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fSub)
+def test_fSub(x_const, y_const, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fSub)
+
 @pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fMul)
 def test_fMul(x_const, y_const, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
     arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fMul)
 
 @pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fDiv)
-def test_fMul(x_const, y_const, expected, fptype, rmode):
+def test_fDiv(x_const, y_const, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
     arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fDiv)
 
