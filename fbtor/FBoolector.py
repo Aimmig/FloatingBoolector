@@ -295,9 +295,9 @@ class FBoolector(Boolector):
     def nextPower2(self, number):
         return int(2**round(math.log(number, 2) + 0.5, 0))
         
-# ---------------------------------------------------------------------------
-# Arithmetic operations addition,multiplikation,subtraction,division etc
-# ---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
+    # Arithmetic operations addition,multiplikation,subtraction,division etc
+    # ---------------------------------------------------------------------------
 
     """
     Adds two nodes, considers the floating point type and rounding mode set in the constructor
@@ -680,7 +680,20 @@ class FBoolector(Boolector):
         
         return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, self.fRound(var, guard, roundb, sticky))))
     
-    #Without rounding
+    # ---------------------------------------------------------------------------
+    # Some UNROUNDED arithmetic operations addition,subtraction
+    # ---------------------------------------------------------------------------
+
+    """
+    Adds two nodes, considers the floating point type from the constructor, but does NOT any rounding
+
+    @param dnodeA: the first operand
+    @type dnodeA: BoolectorBVNode
+    @param dnodeB: the second operand
+    @type dnodeB: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the unrounded Bitvector addition
+    """
     def fAddWR(self, dnodeA, dnodeB):
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
         nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
@@ -786,15 +799,25 @@ class FBoolector(Boolector):
         
         return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, var)))
     
+    """
+    Subtracts two nodes, considers the floating point type from the constructor, but does NOT any rounding
+
+    @param nodeA: the first operand (minuend)
+    @type nodeA: BoolectorBVNode
+    @param nodeB: the second operand (subtrahend)
+    @type nodeB: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the unrounded Bitvector subtraction
+    """
     def fSubWR(self, nodeA, nodeB):
         # create and assert new var to -nodeB
         neg_nodeB = self.fNeg(nodeB)
         # redirect a-b to a+(-b)
         return self.fAddWR(nodeA,neg_nodeB)
 
-# ---------------------------------------------------------------------------
-# Methods that handle rounding of the results
-# ---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
+    # Methods that handle rounding of the results
+    # ---------------------------------------------------------------------------
 
     def fRound(self, node, guard, round, sticky): #TODO special cases
         return super().Cond(
@@ -849,9 +872,9 @@ class FBoolector(Boolector):
                     self.fAddWR(node, var),
                     node))
 
-# ---------------------------------------------------------------------------
-# Methods for compare operators: Eq,Lt,Gt,etc....
-# ---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
+    # Methods for compare operators: Eq,Lt,Gt,etc....
+    # ---------------------------------------------------------------------------
 
     """
     Checks the equality of 2 IEE Bitvectors
