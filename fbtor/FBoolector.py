@@ -145,13 +145,27 @@ class FBoolector(Boolector):
             super().Eq(self.fExponent(node), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
             super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
 
-    #TO-DO: might not be necesary ..
+    """
+    Checks if node represents positiv infinity
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is +infinity or not
+    """
     def fPInf(self, node):
         return super().And(
             super().Not(self.fSign(node)),
             self.fInf(node))
 
-    #TO-DO: migt not be neccassry ..
+    """
+    Checks if node represents negative infinity
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: new BoolectorBVNode (length 1) that indicates wether node is -infinity or not
+    """
     def fNInf(self, node):
         return super().And(
             self.fSign(node),
@@ -235,7 +249,15 @@ class FBoolector(Boolector):
             super().Const(False))
         
         return self.fRound(var, guard, round, sticky)
-    
+
+    """
+    Compute node that has that represents negative floating point number
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the same number as the input node
+              but with inverted sign-bit
+    """
     def fNeg(self, node):
         var = self.fVar(self.FloatSort())
         super().Assert(super().And(super().And(
@@ -243,7 +265,16 @@ class FBoolector(Boolector):
             super().Eq(self.fExponent(node), self.fExponent(var))),
             super().Eq(self.fSign(node), super().Not(self.fSign(var)))))
         return var
-        
+
+    """
+    Gets the absolute value of a node
+
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the same number as the input node
+              but with sign-bit always set to 0
+    """
     def fAbs(self, node):
         var = self.fVar(self.FloatSort())
         super().Assert(super().And(super().And(
@@ -251,11 +282,18 @@ class FBoolector(Boolector):
             super().Eq(self.fMantisse(node), self.fMantisse(var))),
             super().Eq(self.fExponent(node), self.fExponent(var))))
         return var
-    
+
+    """
+    Computes next larger power of 2
+
+    @param number: input
+    @type number: int
+    @rtype: int
+    @returns: the next larger power of 2 for the given number
+    """
     def nextPower2(self, number):
         return int(2**round(math.log(number, 2) + 0.5, 0))
         
-    
     #Arithmetic Operations
     def fAdd(self, dnodeA, dnodeB):
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
