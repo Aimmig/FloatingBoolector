@@ -236,42 +236,6 @@ class FBoolector(Boolector):
         
         return self.fRound(var, guard, round, sticky)
     
-    #TO-DO: the following functions might not be necessary ....
-    # ---------------------------------------------------------
-    # ---------------------------------------------------------
-
-    # checks if a has the given property and returns b if so otherwise returns
-    # value of the elseCondition
-    def fPropElse(self, nodeA,nodeB, fProp, elseCond):
-        return Cond(
-                   fProp(nodeA),
-                   nodeB,
-                   elseCond
-               )
-
-    def fInfElse(nodeA, nodeB, elseCond):
-        return fProp(nodeA, nodeA, fInf,
-                     fProp(nodeB, nodeB, fInf,
-                           elseCond
-                     )
-                )
-
-    def fNanElse(nodeA, nodeB, elseCond):
-        return fProp(nodeA, nodeA, fNaN,
-                     fProp(nodeB, nodeB, fNaN,
-                           elseCond
-                     )
-                )
-
-    def fNullElse(nodeA, nodeB, elseCond):
-        return fProp(nodeA, nodeB, fNull,
-                     fProp(nodeB, nodeA, fNull,
-                           elseCond
-                     )
-                )
-    # ---------------------------------------------------------
-    # ---------------------------------------------------------
-
     def fNeg(self, node):
         var = self.fVar(self.FloatSort())
         super().Assert(super().And(super().And(
