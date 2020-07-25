@@ -635,7 +635,7 @@ class FBoolector(Boolector):
         return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, self.fRound(var, guard, roundb, sticky))))
     
     #Without rounding
-    def fAddWR(self, nodeA, nodeB):
+    def fAddWR(self, dnodeA, dnodeB):
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
         nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
         
@@ -774,7 +774,7 @@ class FBoolector(Boolector):
                     super().Or(guard,
                     super().Or(round,
                     sticky)),
-                    self.fSub(node, var),
+                    self.fSubWR(node, var),
                     node),
                 node)
         elif self.rmode == RMode.to_pos_inf:
@@ -785,7 +785,7 @@ class FBoolector(Boolector):
                     super().Or(guard,
                     super().Or(round,
                     sticky)),
-                    self.fAdd(node, var),
+                    self.fAddWR(node, var),
                     node))
         else:
             return super().Cond(
@@ -794,13 +794,13 @@ class FBoolector(Boolector):
                     super().And(guard,
                     super().Or(round,
                     sticky)),
-                    self.fSub(node, var),
+                    self.fSubWR(node, var),
                     node),
                 super().Cond(
                     super().And(guard,
                     super().Or(round,
                     sticky)),
-                    self.fAdd(node, var),
+                    self.fAddWR(node, var),
                     node))
 
 # ---------------------------------------------------------------------------
