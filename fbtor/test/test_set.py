@@ -10,23 +10,24 @@ d = FPType.double
 r = RMode.to_zero
 
 set_fEq=  [ ("-0","+0",Boolector.SAT,t,r), ("-1","+1",Boolector.UNSAT,t,r), ("5e17","5e17",Boolector.SAT,t,r), ("5e17","5.000001e17",Boolector.UNSAT,t,r),
-           ("2.0000001","2",Boolector.SAT,t,r)
+           ("2.0000001","2",Boolector.SAT,t,r),("3.403E38","inf",Boolector.SAT,t,r),("3.4025E38","inf",Boolector.UNSAT,t,r)
           ]
 
 set_fGtE= [ ("-0","+0",Boolector.SAT,t,r), ("-1","+1",Boolector.UNSAT,t,r), ("5e17","5e17",Boolector.SAT,t,r), ("5e17","5.000001e17",Boolector.UNSAT,t,r),
-            ("2.0000001","2",Boolector.SAT,t,r)
+            ("2.0000001","2",Boolector.SAT,t,r),("1.797693e308","inf",Boolector.UNSAT,d,r), ("1.797694e308","inf",Boolector.SAT,d,r)
           ]
 
 set_fLtE= [ ("+0","-0",Boolector.SAT,d,r), ("-1","+1",Boolector.SAT,d,r), ("5e17","5e17",Boolector.SAT,d,r), ("5e17","5.000001e17",Boolector.SAT,d,r),
-            ("2.0000001","2",Boolector.UNSAT,d,r)
+            ("2.0000001","2",Boolector.UNSAT,d,r),("-1.797693e308","-inf",Boolector.UNSAT,d,r), ("-1.797694e308","-inf",Boolector.SAT,d,r)
           ]
 
 set_fGt=  [ ("-0","0",Boolector.UNSAT,d,r), ("-1","+1",Boolector.UNSAT,d,r), ("5e17","5e17",Boolector.UNSAT,d,r), ("5e17","5.000001e17",Boolector.UNSAT,d,r),
-            ("2.0000001","2",Boolector.SAT,d,r), ("-3","-8",Boolector.SAT,d,r), ("-123","-123",Boolector.UNSAT,d,r), ("-25.1","-25.11",Boolector.SAT,d,r)
+            ("2.0000001","2",Boolector.SAT,d,r), ("-3","-8",Boolector.SAT,d,r), ("-123","-123",Boolector.UNSAT,d,r), ("-25.1","-25.11",Boolector.SAT,d,r), ("1.797693e308","inf",Boolector.UNSAT,d,r), ("inf","inf",Boolector.UNSAT,d,r),("-inf","inf",Boolector.UNSAT,d,r)
           ]
 
 set_fLt=  [ ("0","0",Boolector.UNSAT,t,r), ("-1","+1",Boolector.SAT,t,r), ("5e17","5e17",Boolector.UNSAT,t,r), ("5e17","5.000001e17",Boolector.SAT,t,r),
-            ("2.0000001","2",Boolector.UNSAT,t,r)
+            ("2.0000001","2",Boolector.UNSAT,t,r), ("-1.797693e308","-inf",Boolector.UNSAT,d,r), ("-inf","-inf",Boolector.UNSAT,d,r),
+            ("-inf","inf",Boolector.SAT,d,r)
           ]
 
 set_fSign=[ ('-inf',"1",t,r), ("-5.12e3","1",t,r), ("-2.17e-4","1",t,r), ("-0","1",t,r), ("-3.72E-40","1",t,r),
