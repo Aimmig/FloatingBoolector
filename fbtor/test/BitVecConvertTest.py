@@ -1,4 +1,5 @@
-from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, WIDTH, MAN, EXP
+from fbtor.BitVecConvert import BitVecConvStatic
+from fbtor.FBoolectorTypes import FPType, RMode, WIDTH, MAN, EXP
 import pytest
 
 """

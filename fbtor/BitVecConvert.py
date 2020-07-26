@@ -1,23 +1,8 @@
 import re
-import enum
+from fbtor.FBoolectorTypes import FPType, RMode
 
 # TO-DO: remove this fixed bit-precision
 additional_bits = 5
-
-EXP = 0
-MAN = 1
-WIDTH = 2
-
-class FPType(enum.Enum):
-    single = [8,23,32]
-    double = [11,52,64]
-    extended = [15,64,80]
-
-class RMode(enum.Enum):
-    to_zero = 0
-    to_neg_inf = -1
-    to_pos_inf = 1
-    to_nearest = 2
 
 """ Class that contains functionality to convert a decimal number to IEE-754 floating-point bitvector.
 
@@ -328,7 +313,6 @@ class BitVecConvStatic:
             remaining_bits = mantissa_bits -len(intpartbinary)
             #safety check for infinty
             if (remaining_bits == 0 and all(i == 1 for i in expbinary) and all(j == 0 for j in intpartbinary)):
-                #TO-DO: fix return value: Need to call getFinalBitString ....
                 result = s, expbinary, intpartbinary
             remaining_bits += additional_bits
             expfract, fractbinary = BitVecConvStatic.convertNumberLT1(num_fract, exp10, exp_bits,remaining_bits,False)

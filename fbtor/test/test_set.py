@@ -1,4 +1,5 @@
-from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, WIDTH
+from fbtor.BitVecConvert import BitVecConvStatic
+from fbtor.FBoolectorTypes import FPType, RMode, WIDTH
 from pyboolector import Boolector
 
 # TO-DO: Thinking about more test cases and check if existings are actually correct
