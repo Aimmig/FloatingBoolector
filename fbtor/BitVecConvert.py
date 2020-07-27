@@ -2,8 +2,7 @@ import re
 from fbtor.FBoolectorTypes import FPType, RMode
 
 # TO-DO: remove this fixed bit-precision
-additional_bits = 5
-
+additional_bits = 3
 """ Class that contains functionality to convert a decimal number to IEE-754 floating-point bitvector.
 
     The first step is to convert the given number in scientifc notation, into a more
@@ -87,15 +86,17 @@ class BitVecConvStatic:
             
             # to nearest$ 
             elif rmode == RMode.to_nearest:
-                if m[mantissa_bits+1] == 0:
+                # guard=0 -> round down
+                if m[mantissa_bits] == 0:
                     return m[0:mantissa_bits]
-                elif 1 in m[mantissa_bits+2:]:
+                # guard=1 and there is another bit 1 after that
+                elif 1 in m[mantissa_bits+1:]:
                     return BitVecConvStatic.addOne(m[:mantissa_bits])
-                # ties to even case
-                elif m[mantissa_bits] == 0:
+                # ties to even case e.g. guard=1 and all other bits after that 0
+                elif m[mantissa_bits-1] == 0:
                     return m[:mantissa_bits]
                 else:
-                    return addOne(m[:mantissa_bits])
+                    return BitVecConvStatic.addOne(m[:mantissa_bits])
 
     """Infinity check for exponent
 
