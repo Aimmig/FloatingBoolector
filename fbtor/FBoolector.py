@@ -747,111 +747,6 @@ class FBoolector(Boolector):
     """
     def fAddWR(self, dnodeA, dnodeB):
         return self.fAddBase(dnodeA,dnodeB,False)
-        """
-        nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
-        nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
-        
-        var = self.fVar(self.FloatSort())
-        super().Assert(super().Eq(self.fSign(var), self.fSign(nodeA)))
-        
-        eDiv = super().Sub(self.fExponent(nodeA), self.fExponent(nodeB))
-        
-        abits = self.nextPower2(2 * self.fptype.value[MAN] + 5)
-        bits = abits - (2 * self.fptype.value[MAN] + 5)
-        
-        emanA = super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeA), super().Const(0, self.fptype.value[MAN] + 3)))
-        emanB = super().Cond(
-            super().Ugte(eDiv, super().Const(abits, self.fptype.value[EXP])),
-            super().Const(0, 2 * self.fptype.value[MAN] + 5),
-            super().Slice(super().Srl(
-                super().Concat(
-                    super().Const(0, bits),
-                    super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeB), super().Const(0, self.fptype.value[MAN] + 3)))),
-                super().Slice(eDiv, math.log(abits, 2) - 1, 0)), 2 * self.fptype.value[MAN] + 4, 0))
-        
-        rem = super().Const(False)
-        #TODO rem = 1, wenn alte mantisse mehr einsen als neue
-        
-        man = super().Var(super().BitVecSort(2 * self.fptype.value[MAN] + 5))
-        super().Assert(super().Eq(man, super().Cond(
-            super().Xor(self.fSign(nodeA), self.fSign(nodeB)),
-            super().Sub(emanA, emanB),
-            super().Add(emanA, emanB))))
-        
-        smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
-        super().Assert(super().Cond(
-            super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 5), man),
-            super().Eq(super().Const(0, math.log(abits, 2)), smlog),
-            super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 5)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
-        mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
-        
-        eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
-        eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
-        eeV = super().Concat(super().Var((super().BitVecSort(2))), eV)
-        
-        super().Assert(super().Eq(eeV,
-            super().Sub(
-                eeA,
-                super().Sub(super().Const(2 * self.fptype.value[MAN] + 3, self.fptype.value[EXP] + 2), mlog))))
-        
-        over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
-        under = super().Or(
-            super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2)),
-            super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 5), man))
-        
-        #Exponent
-        super().Assert(super().Eq(self.fExponent(var), super().Cond(
-            over,
-            super().Const(-1, self.fptype.value[EXP]),
-            super().Cond(
-                under,
-                super().Const(0, self.fptype.value[EXP]),
-                eV))))
-        
-        smanbits = self.nextPower2(2 * self.fptype.value[MAN] + 5)
-        slog = super().Slice(mlog, math.log(smanbits, 2) - 1, 0)
-        undero = super().Cond(
-            under,
-            super().Slice(
-                super().Neg(eeV),
-                math.log(smanbits, 2) - 1,
-                0),
-            super().Const(0, math.log(smanbits, 2)))
-        shman = super().Slice(
-            super().Sll(
-                super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 5)), man),
-                super().Sub(
-                    super().Sub(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), slog),
-                    undero)),
-            2 * self.fptype.value[MAN] + 4, 0)
-        
-        #Mantisse
-        super().Assert(super().Eq(self.fMantisse(var), super().Cond(
-            over,
-            super().Const(0, self.fptype.value[MAN]),
-            super().Slice(shman, 2 * self.fptype.value[MAN] + 3, self.fptype.value[MAN] + 4))))
-        
-        varNaN = super().Or(
-            super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
-            super().Or(
-                super().And(self.fPInf(nodeA), self.fNInf(nodeB)),
-                super().And(self.fPInf(nodeB), self.fNInf(nodeA))))
-        nan = self.fVar(self.FloatSort())
-        super().Assert(self.fNaN(nan))
-        
-        varInf = super().Or(
-            self.fInf(nodeA),
-            self.fInf(nodeB))
-        inf = self.fVar(self.FloatSort())
-        super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
-        super().Assert(self.fInf(inf))
-        
-        varNull = self.fEq(self.fNeg(nodeA), nodeB)
-        null = self.fVar(self.FloatSort())
-        super().Assert(self.fNull(null))
-        
-        return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, var)))
-    """
 
     """
     Subtracts two nodes, considers the floating point type from the constructor, but does NOT any rounding
@@ -886,8 +781,15 @@ class FBoolector(Boolector):
     def fRoundN(self, node, guard, round, sticky):
         var = self.fVar(self.FloatSort())
         super().Assert(super().Not(self.fSign(var)))
-        super().Assert(super().Eq(self.fExponent(node), self.fExponent(var)))
-        super().Assert(super().Eq(super().Const(1, self.fptype.value[MAN]), self.fMantisse(var)))
+        under = super().Ulte(self.fExponent(node), super().Const(self.fptype.value[MAN], self.fptype.value[EXP]))
+        super().Assert(super().Eq(self.fExponent(var), super().Cond(
+            under,
+            super().Const(0, self.fptype.value[EXP]),
+            super().Sub(self.fExponent(node), super().Const(self.fptype.value[MAN], self.fptype.value[EXP])))))
+        super().Assert(super().Eq(self.fMantisse(var), super().Cond(
+            under,
+            super().Const(1, self.fptype.value[MAN]),
+            super().Const(0, self.fptype.value[MAN]))))
         
         if self.rmode == RMode.to_zero:
             return node
