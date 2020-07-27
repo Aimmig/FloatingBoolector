@@ -76,14 +76,20 @@ class BitVecConvStatic:
                 if s == 1:
                     return m[:mantissa_bits]
                 else:
-                    return BitVecConvStatic.addOne(m[:mantissa_bits])
+                    if len(m)-additional_bits <= mantissa_bits:
+                        return m[:mantissa_bits]
+                    else:
+                        return BitVecConvStatic.addOne(m[:mantissa_bits])
             
             # to neg inf truncates only pos numbers
             elif rmode == RMode.to_neg_inf:
                 if s == 0:
                     return m[:mantissa_bits]
                 else:
-                    return BitVecConvStatic.addOne(m[:mantissa_bits])
+                    if len(m)-additional_bits <= mantissa_bits:
+                        return m[:mantissa_bits]
+                    else:
+                        return BitVecConvStatic.addOne(m[:mantissa_bits])
             
             # to nearest$ 
             elif rmode == RMode.to_nearest:
