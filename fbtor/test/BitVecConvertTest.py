@@ -6,7 +6,7 @@ import pytest
 Test cases for the string to bitstring implementation:
 """
 
-#TO-DO: Cover more cases ...
+#TO-DO: Cover more cases .... maybe look at the other scripting file and check the output with an online converter
 
 def test_Zero():
      for t in FPType:

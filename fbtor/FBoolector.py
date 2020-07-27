@@ -4,6 +4,8 @@ from pyboolector import _BoolectorBitVecSort, Boolector
 
 import math
 
+# TO-DO: short description of what the class does
+#        what function it overs etc
 class FBoolector(Boolector):
     
     """
@@ -300,6 +302,7 @@ class FBoolector(Boolector):
     # Arithmetic operations addition,multiplikation,subtraction,division etc
     # ---------------------------------------------------------------------------
 
+    # TO-DO: Update method header comments for fAdd fAddBase, fAddWR to new flag ...
     """
     Adds two nodes, considers the floating point type and rounding mode set in the constructor
 
@@ -829,6 +832,7 @@ class FBoolector(Boolector):
     # Methods that handle rounding of the results
     # ---------------------------------------------------------------------------
 
+    # TO-DO: Comments for fRound & fRoundN regarding input values and what they do
     def fRound(self, node, guard, round, sticky): #TODO special cases
         return super().Cond(
             self.fNaN(node),
