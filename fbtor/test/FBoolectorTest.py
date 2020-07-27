@@ -1,4 +1,5 @@
-from fbtor.BitVecConvert import BitVecConvStatic, WIDTH
+from fbtor.BitVecConvert import BitVecConvStatic
+from fbtor.FBoolectorTypes import WIDTH
 import pytest
 from fbtor.FBoolector import FBoolector
 from pyboolector import Boolector, BTOR_OPT_MODEL_GEN

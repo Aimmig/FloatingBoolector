@@ -1,24 +1,9 @@
 import re
-import enum
+from fbtor.FBoolectorTypes import FPType, RMode
 
+# TO-DO: look at remaining TO-DOs or remove them ...
 # TO-DO: remove this fixed bit-precision
-additional_bits = 5
-
-EXP = 0
-MAN = 1
-WIDTH = 2
-
-class FPType(enum.Enum):
-    single = [8,23,32]
-    double = [11,52,64]
-    extended = [15,64,80]
-
-class RMode(enum.Enum):
-    to_zero = 0
-    to_neg_inf = -1
-    to_pos_inf = 1
-    to_nearest = 2
-
+additional_bits = 3
 """ Class that contains functionality to convert a decimal number to IEE-754 floating-point bitvector.
 
     The first step is to convert the given number in scientifc notation, into a more
@@ -102,15 +87,17 @@ class BitVecConvStatic:
             
             # to nearest$ 
             elif rmode == RMode.to_nearest:
-                if m[mantissa_bits+1] == 0:
+                # guard=0 -> round down
+                if m[mantissa_bits] == 0:
                     return m[0:mantissa_bits]
-                elif 1 in m[mantissa_bits+2:]:
+                # guard=1 and there is another bit 1 after that
+                elif 1 in m[mantissa_bits+1:]:
                     return BitVecConvStatic.addOne(m[:mantissa_bits])
-                # ties to even case
-                elif m[mantissa_bits] == 0:
+                # ties to even case e.g. guard=1 and all other bits after that 0
+                elif m[mantissa_bits-1] == 0:
                     return m[:mantissa_bits]
                 else:
-                    return addOne(m[:mantissa_bits])
+                    return BitVecConvStatic.addOne(m[:mantissa_bits])
 
     """Infinity check for exponent
 
@@ -328,7 +315,6 @@ class BitVecConvStatic:
             remaining_bits = mantissa_bits -len(intpartbinary)
             #safety check for infinty
             if (remaining_bits == 0 and all(i == 1 for i in expbinary) and all(j == 0 for j in intpartbinary)):
-                #TO-DO: fix return value: Need to call getFinalBitString ....
                 result = s, expbinary, intpartbinary
             remaining_bits += additional_bits
             expfract, fractbinary = BitVecConvStatic.convertNumberLT1(num_fract, exp10, exp_bits,remaining_bits,False)

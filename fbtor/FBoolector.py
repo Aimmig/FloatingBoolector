@@ -1,8 +1,11 @@
-from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, EXP, MAN, WIDTH
+from fbtor.FBoolectorTypes import FPType, RMode, EXP, MAN, WIDTH
+from fbtor.BitVecConvert import BitVecConvStatic
 from pyboolector import _BoolectorBitVecSort, Boolector
 
 import math
 
+# TO-DO: short description of what the class does
+#        what function it overs etc
 class FBoolector(Boolector):
     
     """
@@ -330,6 +333,7 @@ class FBoolector(Boolector):
     # Arithmetic operations addition,multiplikation,subtraction,division etc
     # ---------------------------------------------------------------------------
 
+    # TO-DO: Update method header comments for fAdd fAddBase, fAddWR to new flag ...
     """
     Adds two nodes, considers the floating point type and rounding mode set in the constructor
 
@@ -341,6 +345,9 @@ class FBoolector(Boolector):
     @returns: a new BoolectorBVNode that contains the Bitvector of the IEE-conform addition of both nodes
     """
     def fAdd(self, dnodeA, dnodeB):
+        return self.fAddBase(dnodeA,dnodeB,True)
+
+    def fAddBase(self, dnodeA, dnodeB, round_flag):
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
         nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
         
@@ -434,21 +441,6 @@ class FBoolector(Boolector):
             super().Const(0, self.fptype.value[MAN]),
             super().Slice(shman, 2 * self.fptype.value[MAN] + 3, self.fptype.value[MAN] + 4))))
         
-        guard = super().Cond(
-            over,
-            super().Const(False),
-            super().Slice(shman, self.fptype.value[MAN] + 3, self.fptype.value[MAN] + 3))
-        roundb = super().Cond(
-            over,
-            super().Const(False),
-            super().Slice(shman, self.fptype.value[MAN] + 2, self.fptype.value[MAN] + 2))
-        sticky = super().Cond(
-            over,
-            super().Const(False),
-            super().Or(super().Not(super().Eq(
-                    super().Const(0, self.fptype.value[MAN] + 2),
-                    super().Slice(shman, self.fptype.value[MAN] + 1, 0))),
-                rem))
         
         varNaN = super().Or(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
@@ -469,7 +461,25 @@ class FBoolector(Boolector):
         null = self.fVar(self.FloatSort())
         super().Assert(self.fNull(null))
         
-        return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, self.fRound(var, guard, roundb, sticky))))
+        if (round_flag):
+            guard = super().Cond(
+                over,
+                super().Const(False),
+                super().Slice(shman, self.fptype.value[MAN] + 3, self.fptype.value[MAN] + 3))
+            roundb = super().Cond(
+                over,
+                super().Const(False),
+                super().Slice(shman, self.fptype.value[MAN] + 2, self.fptype.value[MAN] + 2))
+            sticky = super().Cond(
+                over,
+                super().Const(False),
+                super().Or(super().Not(super().Eq(
+                    super().Const(0, self.fptype.value[MAN] + 2),
+                    super().Slice(shman, self.fptype.value[MAN] + 1, 0))),
+                    rem))
+            return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, self.fRound(var, guard, roundb, sticky))))
+        else:
+            return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, var)))
 
     """
     Subtracts a node from the other, considers the floating point type and rounding mode set in the constructor
@@ -736,6 +746,8 @@ class FBoolector(Boolector):
     @returns: a new BoolectorBVNode that contains the unrounded Bitvector addition
     """
     def fAddWR(self, dnodeA, dnodeB):
+        return self.fAddBase(dnodeA,dnodeB,False)
+        """
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
         nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
         
@@ -839,7 +851,8 @@ class FBoolector(Boolector):
         super().Assert(self.fNull(null))
         
         return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, var)))
-    
+    """
+
     """
     Subtracts two nodes, considers the floating point type from the constructor, but does NOT any rounding
 
@@ -860,6 +873,7 @@ class FBoolector(Boolector):
     # Methods that handle rounding of the results
     # ---------------------------------------------------------------------------
 
+    # TO-DO: Comments for fRound & fRoundN regarding input values and what they do
     def fRound(self, node, guard, round, sticky): #TODO special cases
         return super().Cond(
             self.fNaN(node),

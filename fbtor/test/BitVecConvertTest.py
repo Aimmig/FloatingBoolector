@@ -1,11 +1,12 @@
-from fbtor.BitVecConvert import FPType, RMode, BitVecConvStatic, WIDTH, MAN, EXP
+from fbtor.BitVecConvert import BitVecConvStatic
+from fbtor.FBoolectorTypes import FPType, RMode, WIDTH, MAN, EXP
 import pytest
 
 """
 Test cases for the string to bitstring implementation:
 """
 
-#TO-DO: Cover more cases ...
+#TO-DO: Cover more cases .... maybe look at the other scripting file and check the output with an online converter
 
 def test_Zero():
      for t in FPType:
