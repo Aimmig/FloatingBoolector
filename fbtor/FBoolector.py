@@ -213,17 +213,48 @@ class FBoolector(Boolector):
         return var
 
     def fConvert(self, node):
+        width = node._width
         var = self.fVar(FloatSort())
+        
         super().Assert(super().Cond(
-            super().Gte(node, super().Const(0, node._sort._width)),
+            super().Gte(node, super().Const(0, width)),
             super().Not(self.fSign(var)),
             self.fSign(var)))
+            
         pos = super().Cond(
-            super().Gte(node, super().Const(0, node._sort._width)),
+            super().Gte(node, super().Const(0, width)),
             node,
             super().Neg(node))
-        log = super().Var(node._sort)
-        super().Assert(super().Eq(super().Const(1, node._sort._width), super().Srl(pos, log)))
+        
+        abits = self.nextPower2(width)
+        bits = abits - width
+        
+        log = super().Var(super().BitVecSort(math.log(abits, 2)))
+        super().Assert(super().Eq(super().Const(1, abits), super().Srl(pos, log)))
+        
+        over = super().Const(False)
+        elog = log
+        if math.log(abits, 2) > self.fptype.value[EXP]:
+            over = super().Ugt(log, super().Const(2**(self.fptype.value[EXP] - 1) - 2, math.log(abits, 2)))
+        elif math.log(abits, 2) == self.fptype.value[EXP]:
+            over = super().Ugt(log, super().Const(2**(self.fptype.value[EXP] - 1) - 2, self.fptype.value[EXP]))
+        else:
+            elog = super().Concat(super().Const(0, self.fptype.value[EXP] - math.log(abits, 2)), log)
+        
+        epos = super().Concat(pos, super().Const(0, self.fptype.value[MAN] + 3))
+        
+        
+        
+        
+        super().Assert(super().Cond(
+            over,
+            super().And(
+                super().Eq(self.fExponent(var), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
+                super().Eq(self.fMantisse(var), super().Const(0, self.fptype.value[MAN]))),
+            super().And(
+                super().Eq(super().Sub(elog, super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP])), self.fExponent(var)),
+                )))
+        
         super().Assert(super().Cond(
             super().Ugte(log, super().Const(2**fbtype[0]-3, fbtype[0])), #enough Exponent bits
             super().And(
@@ -322,7 +353,7 @@ class FBoolector(Boolector):
         bits = abits - (2 * self.fptype.value[MAN] + 5)
         
         emanA = super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeA), super().Const(0, self.fptype.value[MAN] + 3)))
-        emanB = super().Cond(
+        emanBT = super().Cond(
             super().Ugte(eDiv, super().Const(abits, self.fptype.value[EXP])),
             super().Const(0, 2 * self.fptype.value[MAN] + 5),
             super().Slice(super().Srl(
@@ -331,8 +362,18 @@ class FBoolector(Boolector):
                     super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeB), super().Const(0, self.fptype.value[MAN] + 3)))),
                 super().Slice(eDiv, math.log(abits, 2) - 1, 0)), 2 * self.fptype.value[MAN] + 4, 0))
         
-        rem = super().Const(False)
-        #TODO rem = 1, wenn alte mantisse mehr einsen als neue
+        rem = super().Not(super().Eq(
+            self.fMantisse(nodeB),
+            super().Slice(super().Sll(
+                super().Concat(
+                    super().Const(0, bits),
+                    emanBT),
+                super().Slice(eDiv, math.log(abits, 2) - 1, 0)), 2 * self.fptype.value[MAN] + 2, self.fptype.value[MAN] + 3)))
+        
+        emanB = super().Cond(
+            super().And(rem, super().Xor(self.fSign(nodeA), self.fSign(nodeB))),
+            super().Add(emanBT, super().Const(1, 2 * self.fptype.value[MAN] + 5)),
+            emanBT)
         
         man = super().Var(super().BitVecSort(2 * self.fptype.value[MAN] + 5))
         super().Assert(super().Eq(man, super().Cond(
