@@ -3,7 +3,8 @@ from fbtor.FBoolectorTypes import FPType, RMode
 
 # TO-DO: look at remaining TO-DOs or remove them ...
 # TO-DO: remove this fixed bit-precision
-additional_bits = 3
+additional_bits = 5
+#additional_bits = 3
 """ Class that contains functionality to convert a decimal number to IEE-754 floating-point bitvector.
 
     The first step is to convert the given number in scientifc notation, into a more

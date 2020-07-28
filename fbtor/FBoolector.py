@@ -59,9 +59,10 @@ class FBoolector(Boolector):
     @param debug: debug flag for conversion
     @type debug: bool
     """
-    def fAssert(self, f, var, num: str, debug=False):
+    """def fAssert(self, f, var, num: str, debug=False):
         super().Assert(f(var,self.fConst(num, debug)))
-    
+    """
+
     """
     Create a bitvector node from string. The rounding mode & floating point type from the FBoolector object are used
 
