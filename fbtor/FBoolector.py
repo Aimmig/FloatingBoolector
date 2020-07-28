@@ -200,21 +200,65 @@ class FBoolector(Boolector):
             super().Eq(self.fExponent(node), super().Const(0, self.fptype.value[EXP])),
             super().Not(super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN]))))
 
-    def Convert(self, sort, node): #TODO special cases, rounding
-        var = super().Var(sort)
-        tshift = super().Add(super().Sub(self.fExponent(node), super().Sll(super().Const(1, self.fptype.value[EXP]), self.fptype.value[EXP]-1)), super().Const(1, self.fptype.value[EXP]))
-        tres = super().Cond(
-            super().Gte(tshift, super().Const(0, self.fptype.value[EXP])),
-            super().Sll(
-                super().Concat(super().Const(1, sort._width-self.fptype.value[MAN]), self.fMantisse(node)),
-                tshift),
-            super().Const(0, sort._width))
-        super().Assert(super().Eq(var, super().Cond(
-            self.fSign(node),
-            tres,
-            super().Neg(tres))))
-        return var
+    """
+    Converts a floating point number to a BitVectorNode
 
+    @param node: the node representing a floating point number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the same number as the input node
+              interpreted as integer
+    """
+    def Convert(self, sort, node): #TODO special cases, rounding
+        width = sort._width
+        var = super().Var(sort)
+        
+        shift = super().Sub(
+            super().Concat(super().Const(0), self.fExponent(node)),
+            super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP] + 1))
+        
+        mind = super().And(super().And(
+            self.fSign(node),
+            super().Eq(shift, super().Const(width - 1, self.fptype.value[EXP] + 1))),
+            super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
+        
+        over = super().And(
+            super().Sgt(shift, super().Const(width - 2, self.fptype.value[EXP] + 1)),
+            super().Not(mind))
+        under = super().Slt(shift, super().Const(0, self.fptype.value[EXP] + 1))
+        
+        bits = max(width, self.fptype.value[MAN] + 1)
+        ebits = self.nextPower2(bits)
+        
+        man = super().Slice(super().Sll(
+                super().Concat(super().Const(0, ebits - self.fptype.value[MAN] - 1), self.fMantisseIm(node)),
+                super().Sub(
+                    super().Slice(shift, math.log(ebits, 2) - 1, 0),
+                    super().Const(self.fptype.value[MAN], math.log(ebits, 2)))),
+            width - 1, 0)
+        
+        super().Assert(super().Eq(var, super().Cond(
+            super().Or(super().Or(over, under), super().Or(self.fNaN(node), self.fInf(node))),
+            super().Const(0, width),
+            super().Cond(
+                self.fSign(node),
+                super().Cond(
+                    mind,
+                    super().Const(2**(width - 1), width),
+                    super().Neg(man)),
+                man))))
+        
+        return var
+        
+    """
+    Converts a BitVectorNode to a floating point number
+
+    @param node: the node representing a integer number
+    @type node: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the same number as the input node
+              interpreted as floating point number
+    """
     def fConvert(self, node):
         width = node._width
         var = self.fVar(FloatSort())

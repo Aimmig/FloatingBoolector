@@ -162,3 +162,11 @@ def test_fDiv(x_const, y_const, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
     arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fDiv)
 
+# ----------------------------------------------------------------------------------
+# Here the real test begin now: convert operators
+# ----------------------------------------------------------------------------------
+
+@pytest.mark.parametrize('x_const,width,expected,fptype,rmode', set_fConvert)
+def test_fConvert(x_const, width, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    arithmeticTemplate(fbtor, sort, [x_const], expected, fbtor.fConvert)
