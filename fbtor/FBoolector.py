@@ -219,68 +219,75 @@ class FBoolector(Boolector):
         width = node._width
         var = self.fVar(FloatSort())
         
+        #Sign
         super().Assert(super().Cond(
             super().Gte(node, super().Const(0, width)),
             super().Not(self.fSign(var)),
             self.fSign(var)))
-            
+        
+        #Positive input BitVector
         pos = super().Cond(
             super().Gte(node, super().Const(0, width)),
             node,
             super().Neg(node))
         
-        abits = self.nextPower2(width)
-        bits = abits - width
+        mbits = max(width, self.fptype.value[MAN] + 4)
+        embits = self.nextPower2(mbits)
         
-        log = super().Var(super().BitVecSort(math.log(abits, 2)))
-        super().Assert(super().Eq(super().Const(1, abits), super().Srl(pos, log)))
+        #Position of the first 1 in pos
+        log = super().Var(super().BitVecSort(math.log(embits, 2)))
+        super().Assert(super().Eq(super().Const(1, embits), super().Srl(super().Concat(super().Const(0, embits - width), pos), log)))
         
-        over = super().Const(False)
-        elog = log
-        if math.log(abits, 2) > self.fptype.value[EXP]:
-            over = super().Ugt(log, super().Const(2**(self.fptype.value[EXP] - 1) - 2, math.log(abits, 2)))
-        elif math.log(abits, 2) == self.fptype.value[EXP]:
-            over = super().Ugt(log, super().Const(2**(self.fptype.value[EXP] - 1) - 2, self.fptype.value[EXP]))
-        else:
-            elog = super().Concat(super().Const(0, self.fptype.value[EXP] - math.log(abits, 2)), log)
+        #Shifted Pos, highest bit equals 1
+        shman = super().Slice(
+            super().Sll(
+                super().Concat(super().Const(0, embits - width), pos),
+                super().Sub(
+                    super().Const(mbits - 1, math.log(embits, 2)),
+                    log)),
+            mbits - 1, 0)
         
-        epos = super().Concat(pos, super().Const(0, self.fptype.value[MAN] + 3))
+        ebits = max(math.log(embits, 2), self.fptype.value[EXP] + 1)
+        eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         
+        #Extended Exponend
+        eeV = super().Concat(super().Var((super().BitVecSort(ebits - width))), eV)
         
+        #Extended log
+        elog = super().Concat(super().Const(0, ebits - math.log(embits, 2)), log)
         
+        #Calculation of the extended Exponend
+        super().Assert(super().Eq(eev, super().Add(super().Const(2**(self.fptype.value[EXP] - 1) - 1, ebits), elog)))
         
-        super().Assert(super().Cond(
+        #Overflow detection
+        over = super().Ugte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, ebits))
+        
+        #Exponent
+        super().Assert(super().Eq(self.fExponent(var), super().Cond(
             over,
-            super().And(
-                super().Eq(self.fExponent(var), super().Const(2**self.fptype.value[EXP]-1, self.fptype.value[EXP])),
-                super().Eq(self.fMantisse(var), super().Const(0, self.fptype.value[MAN]))),
-            super().And(
-                super().Eq(super().Sub(elog, super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP])), self.fExponent(var)),
-                )))
+            super().Const(-1, self.fptype.value[EXP]),
+            eV)))
         
-        super().Assert(super().Cond(
-            super().Ugte(log, super().Const(2**fbtype[0]-3, fbtype[0])), #enough Exponent bits
-            super().And(
-                super().Eq(self.fExponent(var), super().Const(2**fbtype[0]-1, fbtype[0])),
-                super().Eq(self.fMantisse(var), super().Const(0, fbtype[0]))),
-            super().And(
-                super().Eq(self.fExponent(var), log),
-                super().Eq(self.fMantisse(var), super().Slice(pos, super().Sub(log, super().Const(1, node._sort._width)), super().Cond(
-                    super().Ugt(log, super().Const(fbtype[1], node._sort._width)), #enough Mantisse bits
-                    super().Sub(log, super().Const(fbtype[1], node._sort._width)),
-                    super().Const(0, node._sort._width)))))))
+        #Mantisse
+        super().Assert(super().Eq(self.fMantisse(var), super().Cond(
+            over,
+            super().Const(0, self.fptype.value[MAN]),
+            super().Slice(shman, mbits - 2, mbits - self.fptype.value[MAN] - 1))))
+        
         guard = super().Cond(
-            super().Ugt(super().Add(log, super().Const(1, node._sort._width)), super().Const(fbtype[1], node._sort._width)), #enough Mantisse bits
-            super().Eq(super().Slice(pos, super().Sub(log, super().Const(fbtype[1]+1, node._sort._width)), super().Sub(log, super().Const(fbtype[1]+1, node._sort._width))), super().Const(1)),
-            super().Const(False))
-        round = super().Cond(
-            super().Ugt(super().Add(log, super().Const(2, node._sort._width)), super().Const(fbtype[1], node._sort._width)), #enough Mantisse bits
-            super().Eq(super().Slice(pos, super().Sub(log, super().Const(fbtype[1]+2, node._sort._width)), super().Sub(log, super().Const(fbtype[1]+2, node._sort._width))), super().Const(1)),
-            super().Const(False))
+            over,
+            super().Const(False),
+            super().Slice(shman, mbits - self.fptype.value[MAN] - 2, mbits - self.fptype.value[MAN] - 2))
+        roundb = super().Cond(
+            over,
+            super().Const(False),
+            super().Slice(shman, mbits - self.fptype.value[MAN] - 3, mbits - self.fptype.value[MAN] - 3))
         sticky = super().Cond(
-            super().Ugt(super().Add(log, super().Const(3, node._sort._width)), super().Const(fbtype[1], node._sort._width)), #enough Mantisse bits
-            super().Not(super().Eq(super().Slice(pos, super().Sub(log, super().Const(fbtype[1]+3, node._sort._width)), super().Const(0, node._sort._width)), super().Const(0, node._sort._width))),
-            super().Const(False))
+            over,
+            super().Const(False),
+            super().Not(super().Eq(
+                super().Const(0, mbits - self.fptype.value[MAN] - 3),
+                super().Slice(shman, mbits - self.fptype.value[MAN] - 4, 0))))
         
         return self.fRound(var, guard, round, sticky)
 
