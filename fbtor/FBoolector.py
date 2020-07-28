@@ -47,23 +47,6 @@ class FBoolector(Boolector):
         return super().Var(sort, symbol)
 
     """
-    Helper method to assert a property to a variable based on a binary function and a value.
-    E.g. asserts that var is equal/less/greater etc. than the given value
-
-    @param f: function that is applied to var,num
-    @type f: BoolectorBVNode x BoolectorBVNode -> BoolectorNode (length 1)
-    @param var: the variable that shall be asserted
-    @type var: BoolectorNode
-    @param num: number that is converted to BoolectorNode
-    @type num: str
-    @param debug: debug flag for conversion
-    @type debug: bool
-    """
-    """def fAssert(self, f, var, num: str, debug=False):
-        super().Assert(f(var,self.fConst(num, debug)))
-    """
-
-    """
     Create a bitvector node from string. The rounding mode & floating point type from the FBoolector object are used
 
     @param num: number to convert
