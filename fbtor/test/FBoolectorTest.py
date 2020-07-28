@@ -10,8 +10,6 @@ from .test_set import *
     For testing arithmetic functions either the constant or (better) the actual bit-assignment can be asserted
 """
 
-# TO-DO: some basic tests for fExp & fMantisse
-
 # ----------------------------------------------------------------------------------
 # Setup & preparations functions
 # ----------------------------------------------------------------------------------
@@ -110,7 +108,7 @@ def test_fLt(x_const, y_const, expected,fptype,rmode):
      compareTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fLt)
 
 # ----------------------------------------------------------------------------------
-# Test fSign method
+# Test fSign, fExponent, fMantisse method
 # ----------------------------------------------------------------------------------
 
 @pytest.mark.parametrize('x_const,expected,fptype,rmode', set_fSign)
@@ -121,6 +119,24 @@ def test_Sign(x_const, expected, fptype, rmode):
      x = fbtor.fConst(x_const)
      fbtor.Sat()
      assert fbtor.fSign(x).assignment == expected
+
+@pytest.mark.parametrize('x_const,expected,fptype,rmode', set_fExponent)
+def test_fExponent(x_const, expected, fptype, rmode):
+     fbtor, sort = _setup_(fptype, rmode)
+     #x = fbtor.Var(sort,"x")
+     #fbtor.Assert(fbtor.Eq(x,fbtor.fConst(x_const)))
+     x = fbtor.fConst(x_const)
+     fbtor.Sat()
+     assert fbtor.fExponent(x).assignment == expected
+
+@pytest.mark.parametrize('x_const,expected,fptype,rmode', set_fMantisse)
+def test_fMantisse(x_const, expected, fptype, rmode):
+     fbtor, sort = _setup_(fptype, rmode)
+     #x = fbtor.Var(sort,"x")
+     #fbtor.Assert(fbtor.Eq(x,fbtor.fConst(x_const)))
+     x = fbtor.fConst(x_const)
+     fbtor.Sat()
+     assert fbtor.fMantisse(x).assignment == expected
 
 # ----------------------------------------------------------------------------------
 # Test fNeg method
