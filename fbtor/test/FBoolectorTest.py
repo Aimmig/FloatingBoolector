@@ -185,4 +185,16 @@ def test_fDiv(x_const, y_const, expected, fptype, rmode):
 @pytest.mark.parametrize('x_const,width,expected,fptype,rmode', set_fConvert)
 def test_fConvert(x_const, width, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
-    arithmeticTemplate(fbtor, sort, [x_const], expected, fbtor.fConvert)
+    x = fbtor.fConvert(fbtor.Const(x_const, width))
+    e = fbtor.fConst(expected)
+    fbtor.Assert(fbtor.fEq(x, e))
+    result = fbtor.Sat()
+    assert result == fbtor.SAT
+    
+@pytest.mark.parametrize('x_const,width,expected,fptype,rmode', set_Convert)
+def test_Convert(x_const, width, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    x = fbtor.Convert(width, fbtor.fConst(x_const))
+    e = fbtor.Const(expected, width)
+    result = fbtor.Sat()
+    assert x.assignment == e.assignment

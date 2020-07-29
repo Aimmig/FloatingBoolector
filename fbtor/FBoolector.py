@@ -193,9 +193,8 @@ class FBoolector(Boolector):
     @returns: a new BoolectorBVNode that contains the same number as the input node
               interpreted as integer
     """
-    def Convert(self, sort, node): #TODO special cases, rounding
-        width = sort._width
-        var = super().Var(sort)
+    def Convert(self, width, node): #TODO special cases, rounding
+        var = super().Var(super().BitVecSort(width))
         
         shift = super().Sub(
             super().Concat(super().Const(0), self.fExponent(node)),
@@ -214,11 +213,19 @@ class FBoolector(Boolector):
         bits = max(width, self.fptype.value[MAN] + 1)
         ebits = self.nextPower2(bits)
         
-        man = super().Slice(super().Sll(
-                super().Concat(super().Const(0, ebits - self.fptype.value[MAN] - 1), self.fMantisseIm(node)),
-                super().Sub(
-                    super().Slice(shift, math.log(ebits, 2) - 1, 0),
-                    super().Const(self.fptype.value[MAN], math.log(ebits, 2)))),
+        man = super().Slice(super().Cond(
+                super().Ugte(super().Slice(shift, math.log(ebits, 2) - 1, 0),
+                    super().Const(self.fptype.value[MAN], math.log(ebits, 2))),
+                super().Sll(
+                    super().Concat(super().Const(0, ebits - self.fptype.value[MAN] - 1), self.fMantisseIm(node)),
+                    super().Sub(
+                        super().Slice(shift, math.log(ebits, 2) - 1, 0),
+                        super().Const(self.fptype.value[MAN], math.log(ebits, 2)))),
+                super().Srl(
+                    super().Concat(super().Const(0, ebits - self.fptype.value[MAN] - 1), self.fMantisseIm(node)),
+                    super().Sub(
+                        super().Const(self.fptype.value[MAN], math.log(ebits, 2)),
+                        super().Slice(shift, math.log(ebits, 2) - 1, 0)))),
             width - 1, 0)
         
         super().Assert(super().Eq(var, super().Cond(
@@ -244,27 +251,32 @@ class FBoolector(Boolector):
               interpreted as floating point number
     """
     def fConvert(self, node):
-        width = node._width
-        var = self.fVar(FloatSort())
+        width = node.width
+        var = self.fVar(self.FloatSort())
         
         #Sign
         super().Assert(super().Cond(
-            super().Gte(node, super().Const(0, width)),
+            super().Sgte(node, super().Const(0, width)),
             super().Not(self.fSign(var)),
             self.fSign(var)))
         
         #Positive input BitVector
         pos = super().Cond(
-            super().Gte(node, super().Const(0, width)),
+            super().Sgte(node, super().Const(0, width)),
             node,
             super().Neg(node))
         
         mbits = max(width, self.fptype.value[MAN] + 4)
         embits = self.nextPower2(mbits)
         
+        posnull = super().Eq(super().Const(0, width), pos)
+        
         #Position of the first 1 in pos
         log = super().Var(super().BitVecSort(math.log(embits, 2)))
-        super().Assert(super().Eq(super().Const(1, embits), super().Srl(super().Concat(super().Const(0, embits - width), pos), log)))
+        super().Assert(super().Cond(
+            posnull,
+            super().Eq(super().Const(0, math.log(embits, 2)), log),
+            super().Eq(super().Const(1, embits), super().Srl(super().Concat(super().Const(0, embits - width), pos), log))))
         
         #Shifted Pos, highest bit equals 1
         shman = super().Slice(
@@ -279,13 +291,13 @@ class FBoolector(Boolector):
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         
         #Extended Exponend
-        eeV = super().Concat(super().Var((super().BitVecSort(ebits - width))), eV)
+        eeV = super().Concat(super().Var((super().BitVecSort(ebits - self.fptype.value[EXP]))), eV)
         
         #Extended log
         elog = super().Concat(super().Const(0, ebits - math.log(embits, 2)), log)
         
         #Calculation of the extended Exponend
-        super().Assert(super().Eq(eev, super().Add(super().Const(2**(self.fptype.value[EXP] - 1) - 1, ebits), elog)))
+        super().Assert(super().Eq(eeV, super().Add(super().Const(2**(self.fptype.value[EXP] - 1) - 1, ebits), elog)))
         
         #Overflow detection
         over = super().Ugte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, ebits))
@@ -317,7 +329,10 @@ class FBoolector(Boolector):
                 super().Const(0, mbits - self.fptype.value[MAN] - 3),
                 super().Slice(shman, mbits - self.fptype.value[MAN] - 4, 0))))
         
-        return self.fRound(var, guard, round, sticky)
+        null = self.fVar(self.FloatSort())
+        super().Assert(self.fNull(null))
+        
+        return super().Cond(posnull, null, self.fRound(var, guard, round, sticky))
 
     """
     Compute node that has that represents negative floating point number
