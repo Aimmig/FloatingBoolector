@@ -4,6 +4,7 @@ import pytest
 from fbtor.FBoolector import FBoolector
 from pyboolector import Boolector, BTOR_OPT_MODEL_GEN
 from .test_set import *
+from .test_converter import set_fSign,set_fMantisse,set_fExponent
 
 """ Test cases for the FBoolector implementation:
     For testing bool-functions (comparison operators) it is sufficent to assert Boolector.UNSAT/Boolector.SAT to such an comparison expression

@@ -4,8 +4,31 @@ from pyboolector import _BoolectorBitVecSort, Boolector
 
 import math
 
-# TO-DO: short description of what the class does
-#        what function it overs etc
+"""The FBoolector class extends Boolector such that floating point formulas
+   can be generated and solved using the Boolector bitvector logic.
+
+   This is done by overring the following functionality:
+
+   -The choosen rounding mode and concrete floating point type can be set
+    once in the constructor and are fixed for all operations.
+   -Rounding modes are implemented according to IEE 754.
+   -The 'floating point nodes' are actually just bitvector nodes of the
+    appropriate length.
+   -Basic arithmetic operatores for addition, multiplication etc, which
+    simulate these IEE 754 operations on bitvector nodes, are implemented
+   -The usual comparision operators are implemented.
+   -TO-DO: shortly mention fConvert & Convert
+   -Some helper functions for checking special cases like infinity,NaN
+    etc, which are used internally but might be usefull for proving
+    formulas.
+
+   Note:
+   -Because our nodes are just normal bitvector nodes, all functions
+    natively offered by boolector can be applied.
+   -Boolector natively offers operator overloading, so the provided
+    floating point operations all use prefix notation, to clearly
+    distinguish them from the native boolector ones.
+"""
 class FBoolector(Boolector):
     
     """
@@ -383,7 +406,6 @@ class FBoolector(Boolector):
     # Arithmetic operations addition,multiplikation,subtraction,division etc
     # ---------------------------------------------------------------------------
 
-    # TO-DO: Update method header comments for fAdd fAddBase, fAddWR to new flag ...
     """
     Adds two nodes, considers the floating point type and rounding mode set in the constructor
 
@@ -397,6 +419,19 @@ class FBoolector(Boolector):
     def fAdd(self, dnodeA, dnodeB):
         return self.fAddBase(dnodeA,dnodeB,True)
 
+    """
+    Adds two nodes, considers the floating point type rounding can be enabled or disabled
+
+    @param dnodeA: the first operand
+    @type dnodeA: BoolectorBVNode
+    @param dnodeB: the second operand
+    @type dnodeB: BoolectorBVNode
+    @param round_flag: enable or disable rounding
+    @type round_flag: bool
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the Bitvector of the IEE-conform addition of both nodes
+              where the result is rounded or not rounded according to the round_flag
+    """
     def fAddBase(self, dnodeA, dnodeB, round_flag):
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
         nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
