@@ -15,7 +15,6 @@ def test_Zero():
                 signbit = "0"
                 if sign == "-":
                    signbit ="1"
-                print(res)
                 assert res == (signbit + (t.value[WIDTH]-1)*"0")
 
 def test_Inf():
@@ -26,21 +25,20 @@ def test_Inf():
                 signbit = "0"
                 if sign == "-":
                    signbit ="1"
-                print(res)
                 assert res == (signbit + t.value[EXP]*"1"+ t.value[MAN]*"0")
 
-@pytest.mark.parametrize('inp,expected,fptype,rmode',subnormal)
-def test_subnormal(inp,expected, fptype,rmode):
-    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == expected
+@pytest.mark.parametrize('inp,s,e,m,fptype,rmode', subnormal)
+def test_subnormal(inp,s,e,m, fptype,rmode):
+    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == s+e+m
 
-@pytest.mark.parametrize('inp,expected,fptype,rmode', small)
-def test_small(inp,expected, fptype,rmode):
-    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == expected
+@pytest.mark.parametrize('inp,s,e,m,fptype,rmode', small)
+def test_small(inp,s,e,m, fptype,rmode):
+    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == s+e+m
 
-@pytest.mark.parametrize('inp,expected,fptype,rmode', large)
-def test_large(inp,expected, fptype,rmode):
-    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == expected
+@pytest.mark.parametrize('inp,s,e,m,fptype,rmode', large)
+def test_large(inp,s,e,m, fptype,rmode):
+    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == s+e+m
 
-@pytest.mark.parametrize('inp,expected,fptype,rmode', normal)
-def test_normal(inp,expected, fptype,rmode):
-    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == expected
+@pytest.mark.parametrize('inp,s,e,m,fptype,rmode', normal)
+def test_normal(inp,s,e,m, fptype,rmode):
+    assert BitVecConvStatic.convertToBinary(inp,fptype,rmode) == s+e+m
