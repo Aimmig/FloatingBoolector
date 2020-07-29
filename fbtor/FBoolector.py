@@ -512,12 +512,18 @@ class FBoolector(Boolector):
                 math.log(smanbits, 2) - 1,
                 0),
             super().Const(0, math.log(smanbits, 2)))
-        shman = super().Slice(
-            super().Sll(
-                super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 5)), man),
-                super().Sub(
-                    super().Sub(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), slog),
-                    undero)),
+        shman = super().Slice(super().Cond(
+                super().Ugte(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), super().Add(slog, undero)),
+                super().Sll(
+                    super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 5)), man),
+                    super().Sub(
+                        super().Sub(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), slog),
+                        undero)),
+                super().Srl(
+                    super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 5)), man),
+                    super().Sub(
+                        super().Add(undero, slog),
+                        super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2))))),
             2 * self.fptype.value[MAN] + 4, 0)
         
         #Mantisse
@@ -644,12 +650,18 @@ class FBoolector(Boolector):
                 math.log(smanbits, 2) - 1,
                 0),
             super().Const(0, math.log(smanbits, 2)))
-        shman = super().Slice(
-            super().Sll(
-                super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 3)), man),
-                super().Sub(
-                    super().Sub(super().Const(2 * self.fptype.value[MAN] + 2, math.log(smanbits, 2)), slog),
-                    undero)),
+        shman = super().Slice(super().Cond(
+                super().Ugte(super().Const(2 * self.fptype.value[MAN] + 2, math.log(smanbits, 2)), super().Add(slog, undero)),
+                super().Sll(
+                    super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 3)), man),
+                    super().Sub(
+                        super().Sub(super().Const(2 * self.fptype.value[MAN] + 2, math.log(smanbits, 2)), slog),
+                        undero)),
+                super().Srl(
+                    super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 3)), man),
+                    super().Sub(
+                        super().Add(undero, slog),
+                        super().Const(2 * self.fptype.value[MAN] + 2, math.log(smanbits, 2))))),
             2 * self.fptype.value[MAN] + 2, 0)
         
         #Mantisse
@@ -758,16 +770,25 @@ class FBoolector(Boolector):
         undero = super().Cond(
             under,
             super().Slice(
-                super().Neg(eeV),
+                super().Cond(
+                    self.fSubnormal(nodeA),
+                    super().Neg(eeV),
+                    super().Add(super().Neg(eeV), super().Const(1, self.fptype.value[EXP] + 2))),
                 math.log(smanbits, 2) - 1,
                 0),
             super().Const(0, math.log(smanbits, 2)))
-        shman = super().Slice(
-            super().Sll(
-                super().Concat(super().Const(0, smanbits - (3 * self.fptype.value[MAN] + 4)), man),
-                super().Sub(
-                    super().Sub(super().Const(3 * self.fptype.value[MAN] + 3, math.log(smanbits, 2)), slog),
-                    undero)),
+        shman = super().Slice(super().Cond(
+                super().Ugte(super().Const(3 * self.fptype.value[MAN] + 3, math.log(smanbits, 2)), super().Add(slog, undero)),
+                super().Sll(
+                    super().Concat(super().Const(0, smanbits - (3 * self.fptype.value[MAN] + 4)), man),
+                    super().Sub(
+                        super().Sub(super().Const(3 * self.fptype.value[MAN] + 3, math.log(smanbits, 2)), slog),
+                        undero)),
+                super().Srl(
+                    super().Concat(super().Const(0, smanbits - (3 * self.fptype.value[MAN] + 4)), man),
+                    super().Sub(
+                        super().Add(undero, slog),
+                        super().Const(3 * self.fptype.value[MAN] + 3, math.log(smanbits, 2))))),
             3 * self.fptype.value[MAN] + 3, 0)
         
         #Mantisse
