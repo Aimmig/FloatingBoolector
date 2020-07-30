@@ -26,8 +26,6 @@ def _setup_(fptype, rmode):
 def prepare(fbtor, sort, const):
      variables = []
      for i in range(len(const)):
-        #x = fbtor.Var(sort,str(i))
-        #fbtor.Assert(fbtor.Eq(x,fbtor.fConst(const[i])))
         variables.append(fbtor.fConst(const[i]))
      return variables
 
@@ -115,8 +113,6 @@ def test_fLt(x_const, y_const, expected,fptype,rmode):
 @pytest.mark.parametrize('x_const,expected,fptype,rmode', set_fSign)
 def test_Sign(x_const, expected, fptype, rmode):
      fbtor, sort = _setup_(fptype, rmode)
-     #x = fbtor.Var(sort,"x")
-     #fbtor.Assert(fbtor.Eq(x,fbtor.fConst(x_const)))
      x = fbtor.fConst(x_const)
      fbtor.Sat()
      assert fbtor.fSign(x).assignment == expected
@@ -124,8 +120,6 @@ def test_Sign(x_const, expected, fptype, rmode):
 @pytest.mark.parametrize('x_const,expected,fptype,rmode', set_fExponent)
 def test_fExponent(x_const, expected, fptype, rmode):
      fbtor, sort = _setup_(fptype, rmode)
-     #x = fbtor.Var(sort,"x")
-     #fbtor.Assert(fbtor.Eq(x,fbtor.fConst(x_const)))
      x = fbtor.fConst(x_const)
      fbtor.Sat()
      assert fbtor.fExponent(x).assignment == expected
@@ -133,8 +127,6 @@ def test_fExponent(x_const, expected, fptype, rmode):
 @pytest.mark.parametrize('x_const,expected,fptype,rmode', set_fMantisse)
 def test_fMantisse(x_const, expected, fptype, rmode):
      fbtor, sort = _setup_(fptype, rmode)
-     #x = fbtor.Var(sort,"x")
-     #fbtor.Assert(fbtor.Eq(x,fbtor.fConst(x_const)))
      x = fbtor.fConst(x_const)
      fbtor.Sat()
      assert fbtor.fMantisse(x).assignment == expected
@@ -143,21 +135,14 @@ def test_fMantisse(x_const, expected, fptype, rmode):
 # Test fNeg method
 # ----------------------------------------------------------------------------------
 
-@pytest.mark.parametrize('const,expected',
-     [
-      ("-0","+0"),("+1","-1"), ("5e17","-5e17"), ("-inf","+inf")
-     ])
+@pytest.mark.parametrize('const,expected', set_fNeg)
 def test_fNeg(const, expected):
      fbtor, sort = _setup_(FPType.single, RMode.to_zero)
      arithmeticTemplate(fbtor, sort, [const], expected, fbtor.fNeg)
 
-
-# TO-DO: Test arithmetic functions
-
 # ----------------------------------------------------------------------------------
 # Here the real test begin now: arithmetic operators
 # ----------------------------------------------------------------------------------
-
 
 @pytest.mark.parametrize('x_const,y_const,expected,fptype,rmode', set_fAdd)
 def test_fAdd(x_const, y_const, expected, fptype, rmode):
