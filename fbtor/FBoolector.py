@@ -219,23 +219,28 @@ class FBoolector(Boolector):
     def Convert(self, width, node): #TODO special cases, rounding
         var = super().Var(super().BitVecSort(width))
         
+        #real exponent without offset
         shift = super().Sub(
             super().Concat(super().Const(0), self.fExponent(node)),
             super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP] + 1))
         
+        #Detection for minumum value
         mind = super().And(super().And(
             self.fSign(node),
             super().Eq(shift, super().Const(width - 1, self.fptype.value[EXP] + 1))),
             super().Eq(self.fMantisse(node), super().Const(0, self.fptype.value[MAN])))
         
+        #Overflow detection
         over = super().And(
             super().Sgt(shift, super().Const(width - 2, self.fptype.value[EXP] + 1)),
             super().Not(mind))
+        #Underflow / Subnormal detection
         under = super().Slt(shift, super().Const(0, self.fptype.value[EXP] + 1))
         
         bits = max(width, self.fptype.value[MAN] + 1)
         ebits = self.nextPower2(bits)
         
+        #Positive Result without special cases
         man = super().Slice(super().Cond(
                 super().Ugte(super().Slice(shift, math.log(ebits, 2) - 1, 0),
                     super().Const(self.fptype.value[MAN], math.log(ebits, 2))),
@@ -251,6 +256,7 @@ class FBoolector(Boolector):
                         super().Slice(shift, math.log(ebits, 2) - 1, 0)))),
             width - 1, 0)
         
+        #Result
         super().Assert(super().Eq(var, super().Cond(
             super().Or(super().Or(over, under), super().Or(self.fNaN(node), self.fInf(node))),
             super().Const(0, width),
@@ -433,17 +439,22 @@ class FBoolector(Boolector):
               where the result is rounded or not rounded according to the round_flag
     """
     def fAddBase(self, dnodeA, dnodeB, round_flag):
+        #nodeA > nodeB
         nodeA = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeA, dnodeB)
         nodeB = super().Cond(self.fGte(self.fAbs(dnodeA), self.fAbs(dnodeB)), dnodeB, dnodeA)
         
         var = self.fVar(self.FloatSort())
+        
+        #Sign
         super().Assert(super().Eq(self.fSign(var), self.fSign(nodeA)))
         
+        #Exponent difference
         eDiv = super().Sub(self.fExponent(nodeA), self.fExponent(nodeB))
         
         abits = self.nextPower2(2 * self.fptype.value[MAN] + 5)
         bits = abits - (2 * self.fptype.value[MAN] + 5)
         
+        #extended mantisse of nodeA and nodeB
         emanA = super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeA), super().Const(0, self.fptype.value[MAN] + 3)))
         emanBT = super().Cond(
             super().Ugte(eDiv, super().Const(abits, self.fptype.value[EXP])),
@@ -454,6 +465,7 @@ class FBoolector(Boolector):
                     super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeB), super().Const(0, self.fptype.value[MAN] + 3)))),
                 super().Slice(eDiv, math.log(abits, 2) - 1, 0)), 2 * self.fptype.value[MAN] + 4, 0))
         
+        #Indicator if theres a bit not equal to zero which was shifted out of the mantisse
         rem = super().Not(super().Eq(
             self.fMantisse(nodeB),
             super().Slice(super().Sll(
@@ -467,12 +479,14 @@ class FBoolector(Boolector):
             super().Add(emanBT, super().Const(1, 2 * self.fptype.value[MAN] + 5)),
             emanBT)
         
+        #Extended mantisse of the result
         man = super().Var(super().BitVecSort(2 * self.fptype.value[MAN] + 5))
         super().Assert(super().Eq(man, super().Cond(
             super().Xor(self.fSign(nodeA), self.fSign(nodeB)),
             super().Sub(emanA, emanB),
             super().Add(emanA, emanB))))
         
+        #index of the first one
         smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Cond(
             super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 5), man),
@@ -480,16 +494,21 @@ class FBoolector(Boolector):
             super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 5)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
         mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
         
+        #extended Exponents
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
         eeV = super().Concat(super().Var((super().BitVecSort(2))), eV)
         
+        #Calculation of the extended exponent of the result
         super().Assert(super().Eq(eeV,
             super().Sub(
                 eeA,
                 super().Sub(super().Const(2 * self.fptype.value[MAN] + 3, self.fptype.value[EXP] + 2), mlog))))
         
+        #Overflow detection
         over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
+        
+        #Underflow / Subnormal detection
         under = super().Or(
             super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2)),
             super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 5), man))
@@ -505,6 +524,8 @@ class FBoolector(Boolector):
         
         smanbits = self.nextPower2(2 * self.fptype.value[MAN] + 5)
         slog = super().Slice(mlog, math.log(smanbits, 2) - 1, 0)
+        
+        #offset for subnormal numbers
         undero = super().Cond(
             under,
             super().Slice(
@@ -512,6 +533,8 @@ class FBoolector(Boolector):
                 math.log(smanbits, 2) - 1,
                 0),
             super().Const(0, math.log(smanbits, 2)))
+            
+        #mantisse with a one on the highest bit
         shman = super().Slice(super().Cond(
                 super().Ugte(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), super().Add(slog, undero)),
                 super().Sll(
@@ -532,7 +555,7 @@ class FBoolector(Boolector):
             super().Const(0, self.fptype.value[MAN]),
             super().Slice(shman, 2 * self.fptype.value[MAN] + 3, self.fptype.value[MAN] + 4))))
         
-        
+        #special case: Not a number
         varNaN = super().Or(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Or(
@@ -541,6 +564,7 @@ class FBoolector(Boolector):
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         
+        #special case: Infinity
         varInf = super().Or(
             self.fInf(nodeA),
             self.fInf(nodeB))
@@ -548,10 +572,12 @@ class FBoolector(Boolector):
         super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
         super().Assert(self.fInf(inf))
         
+        #special case: zero
         varNull = self.fEq(self.fNeg(nodeA), nodeB)
         null = self.fVar(self.FloatSort())
         super().Assert(self.fNull(null))
         
+        #rounding bits
         if (round_flag):
             guard = super().Cond(
                 over,
@@ -600,8 +626,11 @@ class FBoolector(Boolector):
     """
     def fMul(self, nodeA, nodeB):
         var = self.fVar(self.FloatSort())
+        
+        #Sign
         super().Assert(super().Eq(self.fSign(var), super().Xor(self.fSign(nodeA), self.fSign(nodeB))))
         
+        #Extended mantisse
         man = super().Var(super().BitVecSort(2 * self.fptype.value[MAN] + 3))
         super().Assert(super().Eq(man, super().Mul(
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeA)),
@@ -610,6 +639,7 @@ class FBoolector(Boolector):
         abits = self.nextPower2(2 * self.fptype.value[MAN] + 3)
         bits = abits - (2 * self.fptype.value[MAN] + 3)
         
+        #index of the highest bit of the mantisse
         smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Cond(
             super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 3), man),
@@ -617,11 +647,13 @@ class FBoolector(Boolector):
             super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 3)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
         mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
         
+        #Extended exponents
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
         eeB = super().Concat(super().Const(0, 2), self.fExponent(nodeB))
         eeV = super().Concat(super().Var((super().BitVecSort(2))), eV)
         
+        #calculation of the extended exponent of the result
         super().Assert(super().Eq(eeV,
             super().Sub(
                 super().Add(eeA, eeB),
@@ -629,7 +661,10 @@ class FBoolector(Boolector):
                     super().Const(2**(self.fptype.value[EXP]-1)-1, self.fptype.value[EXP] + 2),
                     super().Sub(super().Const(2 * self.fptype.value[MAN] + 0, self.fptype.value[EXP] + 2), mlog)))))
         
+        #Overflow detection
         over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
+        
+        #Underflow / Subnormal detection
         under = super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2))
         
         #Exponent
@@ -643,6 +678,8 @@ class FBoolector(Boolector):
         
         smanbits = self.nextPower2(2 * self.fptype.value[MAN] + 3)
         slog = super().Slice(mlog, math.log(smanbits, 2) - 1, 0)
+        
+        #offset for subnormal numbers
         undero = super().Cond(
             under,
             super().Slice(
@@ -650,6 +687,8 @@ class FBoolector(Boolector):
                 math.log(smanbits, 2) - 1,
                 0),
             super().Const(0, math.log(smanbits, 2)))
+            
+        #mantisse with highest bit one
         shman = super().Slice(super().Cond(
                 super().Ugte(super().Const(2 * self.fptype.value[MAN] + 2, math.log(smanbits, 2)), super().Add(slog, undero)),
                 super().Sll(
@@ -670,6 +709,7 @@ class FBoolector(Boolector):
             super().Const(0, self.fptype.value[MAN]),
             super().Slice(shman, 2 * self.fptype.value[MAN] + 1, self.fptype.value[MAN] + 2))))
         
+        #rounding bits
         guard = super().Cond(
             over,
             super().Const(False),
@@ -685,6 +725,7 @@ class FBoolector(Boolector):
                 super().Const(0, self.fptype.value[MAN]),
                 super().Slice(shman, self.fptype.value[MAN] - 1, 0))))
         
+        #special case: Not a number
         varNaN = super().Or(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Or(
@@ -693,6 +734,7 @@ class FBoolector(Boolector):
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         
+        #special case: infinity
         varInf = super().Or(
             self.fInf(nodeA),
             self.fInf(nodeB))
@@ -700,6 +742,7 @@ class FBoolector(Boolector):
         super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
         super().Assert(self.fInf(inf))
         
+        #special case: zero
         varNull = super().Or(
             self.fNull(nodeA),
             self.fNull(nodeB))
@@ -720,13 +763,17 @@ class FBoolector(Boolector):
     """
     def fDiv(self, nodeA, nodeB):
         var = self.fVar(self.FloatSort())
+        
+        #Sign
         super().Assert(super().Eq(self.fSign(var), super().Xor(self.fSign(nodeA), self.fSign(nodeB))))
         
+        #extended mantisse
         man = super().Var(super().BitVecSort(3 * self.fptype.value[MAN] + 4))
         super().Assert(super().Eq(man, super().Udiv(
             super().Concat(self.fMantisseIm(nodeA), super().Const(0, 2 * self.fptype.value[MAN] + 3)),
             super().Concat(super().Const(0, 2 * self.fptype.value[MAN] + 3), self.fMantisseIm(nodeB)))))
         
+        #Indicator if theres a bit not equal to zero which was shifted out of the mantisse
         rem = super().Not(super().Eq(super().Const(0, 3 * self.fptype.value[MAN] + 4), super().Urem(
             super().Concat(self.fMantisseIm(nodeA), super().Const(0, 2 * self.fptype.value[MAN] + 3)),
             super().Concat(super().Const(0, 2 * self.fptype.value[MAN] + 3), self.fMantisseIm(nodeB)))))
@@ -734,6 +781,7 @@ class FBoolector(Boolector):
         abits = self.nextPower2(3 * self.fptype.value[MAN] + 4)
         bits = abits - (3 * self.fptype.value[MAN] + 4)
         
+        #Index of the first one of the mantisse
         smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Cond(
             super().Eq(super().Const(0, 3 * self.fptype.value[MAN] + 4), man),
@@ -741,11 +789,13 @@ class FBoolector(Boolector):
             super().Eq(super().Const(1, abits), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
         mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
         
+        #Extended exponents
         eV = super().Var(super().BitVecSort(self.fptype.value[EXP]))
         eeA = super().Concat(super().Const(0, 2), self.fExponent(nodeA))
         eeB = super().Concat(super().Const(0, 2), self.fExponent(nodeB))
         eeV = super().Concat(super().Var((super().BitVecSort(2))), eV)
         
+        #Calculation of the extended exponent of the result
         super().Assert(super().Eq(eeV,
             super().Add(
                 super().Sub(eeA, eeB),
@@ -753,7 +803,10 @@ class FBoolector(Boolector):
                     super().Const(2**(self.fptype.value[EXP]-1)-1, self.fptype.value[EXP] + 2),
                     super().Sub(super().Const(2 * self.fptype.value[MAN] + 3, self.fptype.value[EXP] + 2), mlog)))))
         
+        #Overflow detection
         over = super().Sgte(eeV, super().Const(2**(self.fptype.value[EXP]) - 1, self.fptype.value[EXP] + 2))
+        
+        #Underflow / Subnormal detection
         under = super().Slte(eeV, super().Const(0, self.fptype.value[EXP] + 2))
         
         #Exponent
@@ -767,6 +820,8 @@ class FBoolector(Boolector):
         
         smanbits = self.nextPower2(3 * self.fptype.value[MAN] + 4)
         slog = super().Slice(mlog, math.log(smanbits, 2) - 1, 0)
+        
+        #offset for subnormal numbers
         undero = super().Cond(
             under,
             super().Slice(
@@ -777,6 +832,8 @@ class FBoolector(Boolector):
                 math.log(smanbits, 2) - 1,
                 0),
             super().Const(0, math.log(smanbits, 2)))
+            
+        #mantisse with highest bit one
         shman = super().Slice(super().Cond(
                 super().Ugte(super().Const(3 * self.fptype.value[MAN] + 3, math.log(smanbits, 2)), super().Add(slog, undero)),
                 super().Sll(
@@ -797,6 +854,7 @@ class FBoolector(Boolector):
             super().Const(0, self.fptype.value[MAN]),
             super().Slice(shman, 3 * self.fptype.value[MAN] + 2, 2 * self.fptype.value[MAN] + 3))))
         
+        #rounding bits
         guard = super().Cond(
             over,
             super().Const(False),
@@ -814,6 +872,7 @@ class FBoolector(Boolector):
                     super().Slice(shman, 2 * self.fptype.value[MAN], 0))),
                 rem))
         
+        #special case: Not a number
         varNaN = super().Or(
             super().Or(self.fNaN(nodeA), self.fNaN(nodeB)),
             super().Or(
@@ -822,6 +881,7 @@ class FBoolector(Boolector):
         nan = self.fVar(self.FloatSort())
         super().Assert(self.fNaN(nan))
         
+        #special case: Infinity
         varInf = super().Or(
             self.fInf(nodeA),
             self.fNull(nodeB))
@@ -829,6 +889,7 @@ class FBoolector(Boolector):
         super().Assert(super().Eq(self.fSign(inf), self.fSign(var)))
         super().Assert(self.fInf(inf))
         
+        #special case: zero
         varNull = super().Or(
             self.fNull(nodeA),
             self.fInf(nodeB))
