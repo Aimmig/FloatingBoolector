@@ -164,6 +164,11 @@ def test_fDiv(x_const, y_const, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
     arithmeticTemplate(fbtor, sort, [x_const, y_const], expected, fbtor.fDiv)
 
+@pytest.mark.parametrize('const,precision,expected,fptype,rmode', set_fSqrt)
+def test_fSqrt(const, precision, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    arithmeticTemplate(fbtor, sort, [const], expected, lambda x: fbtor.fSqrt(x, precision))
+
 # ----------------------------------------------------------------------------------
 # Here the real test begin now: convert operators
 # ----------------------------------------------------------------------------------

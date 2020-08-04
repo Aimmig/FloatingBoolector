@@ -898,6 +898,37 @@ class FBoolector(Boolector):
         
         return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, self.fRound(var, guard, roundb, sticky))))
     
+    
+    
+    def fSqrt(self, node, precision = 5):
+        if (precision < 1):
+            return node
+        
+        d = super().Slice(super().Add(
+            super().Sdiv(
+                super().Sub(super().Concat(super().Const(0), self.fExponent(node)), super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP] + 1)),
+                super().Const(2, self.fptype.value[EXP] + 1)),
+            super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP] + 1)), self.fptype.value[EXP] - 1, 0)
+        
+        x = self.fVar(self.FloatSort())
+        super().Assert(super().And(super().And(
+            super().Eq(self.fSign(x), self.fSign(node)),
+            super().Eq(self.fMantisse(x), self.fMantisse(node))),
+            super().Eq(self.fExponent(x), d)))
+        
+        for i in range(precision):
+            x = self.fDiv(self.fAdd(x, self.fDiv(node, x)), self.fConst("2"))
+        
+        nan = self.fVar(self.FloatSort())
+        super().Assert(self.fNaN(nan))
+        
+        inf = self.fVar(self.FloatSort())
+        super().Assert(self.fPInf(inf))
+        
+        return super().Cond(self.fSign(node), nan, super().Cond(self.fPInf(node), inf, x))
+        
+        
+    
     # ---------------------------------------------------------------------------
     # Some UNROUNDED arithmetic operations addition,subtraction
     # ---------------------------------------------------------------------------
