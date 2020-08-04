@@ -1,9 +1,16 @@
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.vtc
 *.aux
 *.log
 *.pdf
 *.gz
 *.pyc
 *.c
+!latex_template/orcid.pdf
 __pycache__/*
 fbtor/__pycache__/
 fbtor/test/__pycache__/
