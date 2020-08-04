@@ -899,16 +899,25 @@ class FBoolector(Boolector):
         return super().Cond(varNaN, nan, super().Cond(varInf, inf, super().Cond(varNull, null, self.fRound(var, guard, roundb, sticky))))
     
     
-    
+    """
+    Calculates the square root of a node with the heron algorithm
+
+    @param node: node
+    @type node: BoolectorBVNode
+    @param precision: number of steps which are calculated
+    @type precision: Integer
+    @rtype: BoolectorBVNode
+    @returns: a new BoolectorBVNode that contains the square root
+    """
     def fSqrt(self, node, precision = 5):
         if (precision < 1):
             return node
         
-        d = super().Slice(super().Add(
-            super().Sdiv(
-                super().Sub(super().Concat(super().Const(0), self.fExponent(node)), super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP] + 1)),
-                super().Const(2, self.fptype.value[EXP] + 1)),
-            super().Const(2**(self.fptype.value[EXP] - 1) - 1, self.fptype.value[EXP] + 1)), self.fptype.value[EXP] - 1, 0)
+        d = super().Add(
+            super().Udiv(
+                self.fExponent(node),
+                super().Const(2, self.fptype.value[EXP])),
+            super().Const(2**(self.fptype.value[EXP] - 2), self.fptype.value[EXP]))
         
         x = self.fVar(self.FloatSort())
         super().Assert(super().And(super().And(
