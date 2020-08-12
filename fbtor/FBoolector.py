@@ -361,7 +361,7 @@ class FBoolector(Boolector):
         null = self.fVar(self.FloatSort())
         super().Assert(self.fNull(null))
         
-        return super().Cond(posnull, null, self.fRound(var, guard, round, sticky))
+        return super().Cond(posnull, null, self.fRound(var, guard, roundb, sticky))
 
     """
     Compute node that has that represents negative floating point number
@@ -975,17 +975,44 @@ class FBoolector(Boolector):
     # Methods that handle rounding of the results
     # ---------------------------------------------------------------------------
 
-    # TO-DO: Comments for fRound & fRoundN regarding input values and what they do
-    def fRound(self, node, guard, round, sticky): #TODO special cases
+    """
+    TO-DO
+
+    @param node: the node to round
+    @type node: BoolectorBVNode
+    @param guard: the IEE guard bit
+    @type guard: BoolectorBVNode
+    @param roundb: the IEE round bit
+    @type roundb: BoolectorBVNode
+    @param sticky: the IEE sticky bit
+    @type sticky: BoolectorBVNode
+    @rtype: BoolectorVBNode
+    @returns: TO-DO
+    """
+    def fRound(self, node, guard, roundb, sticky): #TODO special cases
         return super().Cond(
             self.fNaN(node),
             node,
             super().Cond(
                 self.fInf(node),
                 node,
-                self.fRoundN(node, guard, round, sticky)))
+                self.fRoundN(node, guard, roundb, sticky)))
 
-    def fRoundN(self, node, guard, round, sticky):
+    """
+    TO-DO
+
+    @param node: the node to round
+    @type node: BoolectorBVNode
+    @param guard: the IEE guard bit
+    @type guard: BoolectorBVNode
+    @param roundb: the IEE round bit
+    @type roundb: BoolectorBVNode
+    @param sticky: the IEE sticky bit
+    @type sticky: BoolectorBVNode
+    @rtype: BoolectorBVNode
+    @returns: TO-DO
+    """
+    def fRoundN(self, node, guard, roundb, sticky):
         var = self.fVar(self.FloatSort())
         super().Assert(super().Not(self.fSign(var)))
         under = super().Ulte(self.fExponent(node), super().Const(self.fptype.value[MAN], self.fptype.value[EXP]))
@@ -1005,7 +1032,7 @@ class FBoolector(Boolector):
                 self.fSign(node),
                 super().Cond(
                     super().Or(guard,
-                    super().Or(round,
+                    super().Or(roundb,
                     sticky)),
                     self.fSubWR(node, var),
                     node),
@@ -1016,7 +1043,7 @@ class FBoolector(Boolector):
                 node,
                 super().Cond(
                     super().Or(guard,
-                    super().Or(round,
+                    super().Or(roundb,
                     sticky)),
                     self.fAddWR(node, var),
                     node))
@@ -1025,13 +1052,13 @@ class FBoolector(Boolector):
                 self.fSign(node),
                 super().Cond(
                     super().And(guard,
-                    super().Or(round,
+                    super().Or(roundb,
                     sticky)),
                     self.fSubWR(node, var),
                     node),
                 super().Cond(
                     super().And(guard,
-                    super().Or(round,
+                    super().Or(roundb,
                     sticky)),
                     self.fAddWR(node, var),
                     node))
