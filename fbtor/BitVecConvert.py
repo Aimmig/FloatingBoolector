@@ -1,10 +1,7 @@
 import re
 from fbtor.FBoolectorTypes import FPType, RMode
 
-# TO-DO: look at remaining TO-DOs or remove them ...
-# TO-DO: remove this fixed bit-precision
 additional_bits = 10
-#additional_bits = 3
 """ Class that contains functionality to convert a decimal number to IEE-754 floating-point bitvector.
 
     The first step is to convert the given number in scientifc notation, into a more
@@ -59,9 +56,6 @@ class BitVecConvStatic:
     @rtype: list[int]
     @returns the correctly rounded mantissa
     """
-    # TO-DO: remove static fixed bit-precision (beginning of file!!)
-    # TO-DO?? Rounding mode (e.g. to nearest) might need another look at
-    # not sure if subnormal numbers round correctly??
     def round(s: int, m: [int], mantissa_bits: int, rmode=None):
             
             # nothing to round
@@ -234,9 +228,6 @@ class BitVecConvStatic:
             if dropLeading1:
                 binary = [1] + binary
             numZerosFront = min_exp - unbiased_exp
-            # TO-DO: not sure if this might cause problems if converting e.g 1+e where e is subnormal
-            #propably should not cause problems because these bits wont ever make it into the signficant
-            #might use test case to check that
             return exp_bits*[0], numZerosFront*[0] + binary
         return BitVecConvStatic.getBiasedExponent(unbiased_exp,exp_bits),binary
 
