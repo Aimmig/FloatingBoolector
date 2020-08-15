@@ -32,8 +32,9 @@ der jeweiligen Funktion ergeben.
 
 Unsere Implementierung befindet sich in der Datei `FBoolector.py`, die
 Interfaces, die für den Benutzer gedacht sind befinden sich (der
-Übersichtlichkeit halber) in der seperaten Datei `FBoolectorInterfac.py`.
+Übersichtlichkeit halber) in der seperaten Datei `FBoolectorInterface.py`.
 In beiden Dateien sind die Funktionen, ihre Eingabe und Ausgabe jeweils
 entsprechend dokumentiert.
 
-# TO-DO: Bespielprogramm, dass die Nullstellen "berechnet" kurz erwähnen.
+Die Datei `quadratic_equation_test.py` beinhaltet ein kleines Bespielprogramm,
+das die Nullstellen einer Funktion berechnet.

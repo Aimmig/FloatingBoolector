@@ -250,23 +250,6 @@ class FBoolectorInterface():
         pass
 
     """
-    TO-DO: fAddBase could be removed here ....
-    Adds two nodes, considers the floating point type rounding can be enabled or disabled
-
-    @param dnodeA: the first operand
-    @type dnodeA: BoolectorBVNode
-    @param dnodeB: the second operand
-    @type dnodeB: BoolectorBVNode
-    @param round_flag: enable or disable rounding
-    @type round_flag: bool
-    @rtype: BoolectorBVNode
-    @returns: a new BoolectorBVNode that contains the Bitvector of the IEE-conform addition of both nodes
-              where the result is rounded or not rounded according to the round_flag
-    """
-    def fAddBase(self, dnodeA, dnodeB, round_flag):
-        pass
-
-    """
     Subtracts a node from the other, considers the floating point type and rounding mode set in the constructor
 
     @param nodeA: the first operand (minuend)
@@ -316,77 +299,6 @@ class FBoolectorInterface():
     @returns: a new BoolectorBVNode that contains the square root
     """
     def fSqrt(self, node, precision = 5):
-        pass
-
-    # ---------------------------------------------------------------------------
-    # Some UNROUNDED arithmetic operations addition,subtraction
-    # ---------------------------------------------------------------------------
-
-    """
-    # TO-DO: faddWR could be removed here ...
-    Adds two nodes, considers the floating point type from the constructor, but does NOT any rounding
-
-    @param dnodeA: the first operand
-    @type dnodeA: BoolectorBVNode
-    @param dnodeB: the second operand
-    @type dnodeB: BoolectorBVNode
-    @rtype: BoolectorBVNode
-    @returns: a new BoolectorBVNode that contains the unrounded Bitvector addition
-    """
-    def fAddWR(self, dnodeA, dnodeB):
-        pass
-
-    """
-    # TO-DO: fSubWR could be removed here ...
-    Subtracts two nodes, considers the floating point type from the constructor, but does NOT any rounding
-
-    @param nodeA: the first operand (minuend)
-    @type nodeA: BoolectorBVNode
-    @param nodeB: the second operand (subtrahend)
-    @type nodeB: BoolectorBVNode
-    @rtype: BoolectorBVNode
-    @returns: a new BoolectorBVNode that contains the unrounded Bitvector subtraction
-    """
-    def fSubWR(self, nodeA, nodeB):
-        pass
-
-    # ---------------------------------------------------------------------------
-    # Methods that handle rounding of the results
-    # ---------------------------------------------------------------------------
-
-    """
-    TO-DO fill in
-
-    @param node: the node to round
-    @type node: BoolectorBVNode
-    @param guard: the IEE guard bit
-    @type guard: BoolectorBVNode
-    @param roundb: the IEE round bit
-    @type roundb: BoolectorBVNode
-    @param sticky: the IEE sticky bit
-    @type sticky: BoolectorBVNode
-    @rtype: BoolectorVBNode
-    @returns: TO-DO fill in
-    """
-    def fRound(self, node, guard, roundb, sticky):
-        pass
-
-    """
-    TO-DO: could maybe be removed here ...
-    TO-DO fill in
-
-    @param node: the node to round
-    @type node: BoolectorBVNode
-    @param guard: the IEE guard bit
-    @type guard: BoolectorBVNode
-    @param roundb: the IEE round bit
-    @type roundb: BoolectorBVNode
-    @param sticky: the IEE sticky bit
-    @type sticky: BoolectorBVNode
-    @rtype: BoolectorBVNode
-    @returns: TO-DO fill in
-    """
-    def fRoundN(self, node, guard, roundb, sticky):
         pass
 
     # ---------------------------------------------------------------------------
