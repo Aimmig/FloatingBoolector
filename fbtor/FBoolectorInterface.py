@@ -298,8 +298,9 @@ class FBoolectorInterface():
     @rtype: BoolectorBVNode
     @returns: a new BoolectorBVNode that contains the square root
     """
-        pass
+    
     def fSqrt(self, node, precision = 5):
+        pass
 
     # ---------------------------------------------------------------------------
     # Methods for compare operators: Eq,Lt,Gt,etc....
