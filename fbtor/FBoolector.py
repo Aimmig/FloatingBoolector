@@ -1,5 +1,6 @@
 from fbtor.FBoolectorTypes import FPType, RMode, EXP, MAN, WIDTH
 from fbtor.BitVecConvert import BitVecConvStatic
+from fbtor.FBoolectorInterface import FBoolectorInterface
 from pyboolector import _BoolectorBitVecSort, Boolector
 
 import math
@@ -29,7 +30,7 @@ import math
     floating point operations all use prefix notation, to clearly
     distinguish them from the native boolector ones.
 """
-class FBoolector(Boolector):
+class FBoolector(Boolector,FBoolectorInterface):
     
     """
     Creates an FBoolector object that extends Boolector object
@@ -39,7 +40,7 @@ class FBoolector(Boolector):
     @param rmode: the rounding mode to use
     @type rmode: RMode
     @rtype: FBoolector
-    @returns a new boolector object, that additionally holds fptype
+    @returns: a new boolector object, that additionally holds fptype
     """
     def __init__(self, fptype, rmode):
         super().__init__()

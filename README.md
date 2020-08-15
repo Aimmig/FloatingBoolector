@@ -28,4 +28,12 @@ Dabei wird für jede getestet Funktion eine seperate Liste angelegt,
 die die Eingabe(n) und die erwareteten Ausgabewerte erhält.
 Je nach Funktion kann die erwartete Ausgabe sowohl eine weitere
 Zahl aber auch SAT/UNSAT sein. Dies sollte sich aus dem Kontext
-der jeweiligen Funktion ergeben. 
+der jeweiligen Funktion ergeben.
+
+Unsere Implementierung befindet sich in der Datei `FBoolector.py`, die
+Interfaces, die für den Benutzer gedacht sind befinden sich (der
+Übersichtlichkeit halber) in der seperaten Datei `FBoolectorInterfac.py`.
+In beiden Dateien sind die Funktionen, ihre Eingabe und Ausgabe jeweils
+entsprechend dokumentiert.
+
+# TO-DO: Bespielprogramm, dass die Nullstellen "berechnet" kurz erwähnen.
