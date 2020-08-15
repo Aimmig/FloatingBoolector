@@ -1,4 +1,3 @@
-#TO-DO: Remove functions from inteface that are not usefull for the end user....
 """The FBoolector class extends Boolector such that floating point formulas
    can be generated and solved using the Boolector bitvector logic.
 
@@ -12,7 +11,8 @@
    -Basic arithmetic operatores for addition, multiplication etc, which
     simulate these IEE 754 operations on bitvector nodes, are implemented
    -The usual comparision operators are implemented.
-   -TO-DO: shortly mention fConvert & Convert
+   -Converting methods between integer bitvectors and floating point bitvectors
+    are implemented
    -Some helper functions for checking special cases like infinity,NaN
     etc, which are used internally but might be usefull for proving
     formulas.
@@ -298,8 +298,8 @@ class FBoolectorInterface():
     @rtype: BoolectorBVNode
     @returns: a new BoolectorBVNode that contains the square root
     """
-    def fSqrt(self, node, precision = 5):
         pass
+    def fSqrt(self, node, precision = 5):
 
     # ---------------------------------------------------------------------------
     # Methods for compare operators: Eq,Lt,Gt,etc....

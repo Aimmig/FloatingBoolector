@@ -18,7 +18,8 @@ import math
    -Basic arithmetic operatores for addition, multiplication etc, which
     simulate these IEE 754 operations on bitvector nodes, are implemented
    -The usual comparision operators are implemented.
-   -TO-DO: shortly mention fConvert & Convert
+   -Converting methods between integer bitvectors and floating point bitvectors
+    are implemented
    -Some helper functions for checking special cases like infinity,NaN
     etc, which are used internally but might be usefull for proving
     formulas.
@@ -985,7 +986,7 @@ class FBoolector(Boolector,FBoolectorInterface):
     # ---------------------------------------------------------------------------
 
     """
-    TO-DO
+    Calculates the rounded floating point number
 
     @param node: the node to round
     @type node: BoolectorBVNode
@@ -996,7 +997,7 @@ class FBoolector(Boolector,FBoolectorInterface):
     @param sticky: the IEE sticky bit
     @type sticky: BoolectorBVNode
     @rtype: BoolectorVBNode
-    @returns: TO-DO
+    @returns: Rounded floating point number
     """
     def fRound(self, node, guard, roundb, sticky):
         return super().Cond(
@@ -1008,7 +1009,7 @@ class FBoolector(Boolector,FBoolectorInterface):
                 self.fRoundN(node, guard, roundb, sticky)))
 
     """
-    TO-DO
+    Calculates the rounded floating point number without special cases
 
     @param node: the node to round
     @type node: BoolectorBVNode
@@ -1019,7 +1020,7 @@ class FBoolector(Boolector,FBoolectorInterface):
     @param sticky: the IEE sticky bit
     @type sticky: BoolectorBVNode
     @rtype: BoolectorBVNode
-    @returns: TO-DO
+    @returns: Rounded floating point number
     """
     def fRoundN(self, node, guard, roundb, sticky):
         var = self.fVar(self.FloatSort())
