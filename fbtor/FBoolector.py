@@ -81,8 +81,14 @@ class FBoolector(Boolector,FBoolectorInterface):
     @returns: a new BoolectorBVNode that contains the IEE representation of the given number
     """
     def fConst(self, num: str, debug: bool=False):
-        return super().Const(BitVecConvStatic.convertToBinary(num, self.fptype, self.rmode, debug), self.fptype.value[WIDTH])
-    
+        #var=""
+        try: 
+           node = BitVecConvStatic.convertToBinary(num, self.fptype, self.rmode, debug)
+        except:
+           var = self.fVar(self.FloatSort())
+           super().Assert(self.fNaN(var))
+           return var
+        return super().Const(node, self.fptype.value[WIDTH])
     """
     Gets the sign of a node
 

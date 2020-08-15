@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 
-#TO-DO: cleanup ....
-
 from fbtor.FBoolectorTypes import FPType, RMode, WIDTH
 from fbtor.FBoolector import FBoolector
 from pyboolector import BTOR_OPT_MODEL_GEN
@@ -11,8 +9,8 @@ if __name__ == "__main__":
     rmode = RMode.to_zero
     
     # Try to solve a simple quadratic equation which is 0 at the following points
-    val1="2"
-    val2="256"
+    val1="5e12"
+    val2="32e-5"
     
     # setup FBoolector, variables etc
     fbtor = FBoolector(fptype,rmode)
@@ -34,17 +32,17 @@ if __name__ == "__main__":
     result = fbtor.Sat()
     
     if (result == fbtor.SAT):
-        print("1. approach: SAT")
+        print("1. approach is SAT, found")
+        print(x.assignment)
+        print("Expected values are:")
         print(x1.assignment)
         print(x2.assignment)
-        print("found:")
-        print(x.assignment)
         #fbtor.Print_model(format="smt2")
     elif(result == fbtor.UNSAT):
         print("1. approach: UNSAT")
-   
+    
     ##########################################
- 
+    
     #overwrite boolector and setup stuff again
     fbtor = FBoolector(fptype,rmode)
     fbtor.Set_opt(BTOR_OPT_MODEL_GEN, 1)
@@ -64,7 +62,7 @@ if __name__ == "__main__":
     fbtor.Assert(formula2)
     
     #manually exclude x1 or x2, if both are excluded formula becomes UNSAT
-    #fbtor.Assert(fbtor.Not(fbtor.fEq(x,x1)))
+    fbtor.Assert(fbtor.Not(fbtor.fEq(x,x1)))
     fbtor.Assert(fbtor.Not(fbtor.fEq(x,x2)))
     
     #manually restrict search area
@@ -72,29 +70,18 @@ if __name__ == "__main__":
     #fbtor.Assert(fbtor.fLt(x,x1))
     #fbtor.Assert(fbtor.And(fbtor.fGt(x,fbtor.fAdd(x1,eps)),fbtor.fLt(x,fbtor.fSub(x2,eps))))
     
-    # TO-DO: NEU FORMULIEREN NACH FIX --------------------------------------------
-   
-    # THIS IS WRONG after the fix
-    # NOTE: Formula2 is even UNSAT when not restricting the possible output values.
-    # Our implementation is therefore not able to find the expected zero values
-    # This means Formula1 is not satisfiablity equvivalent to Formula2 even
-    # if they are mathematically equivalent
-    #
-    # Depending on the chosen values at the top, it might be possible for Formula2 to
-    # be SAT, e.g when x1=0 such that the equation reduces to x^2-x2*x=0.
-    # But in such cases both Formula1 & Formula2 might expose more SAT-assignments than
-    # one would expect e.g. it finds a value (very small x') where x'!=x2 with x'*x' -x2*x' = 0
-    # This shows that even Formula1 can't (generally) be used to "just" calculate all solutions
-    # (Also Formula1 isn't quite usefull for solving the equation at the first place)
+    # RESULT: TO-DO: noch etwas mehr schreiben .. TO-DO: noch etwas mehr schreiben ....
+    # This examples shows, that our implementation is able to solve (simple) quadratic equation.
+    # The fact the IEE floating point numbers are not mathematically exact is also
     
     result = fbtor.Sat()
     
     if (result == fbtor.SAT):
-        print("2. approach: SAT")
+        print("2. approach is SAT, found:")
+        print(x.assignment)
+        print("Expected values are:")
         print(x1.assignment)
         print(x2.assignment)
-        print("found:")
-        print(x.assignment)
         #fbtor.Print_model(format="smt2")
     elif(result == fbtor.UNSAT):
         print("2. approach: UNSAT")
