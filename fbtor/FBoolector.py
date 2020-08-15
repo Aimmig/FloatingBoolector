@@ -971,6 +971,8 @@ class FBoolector(Boolector):
         # redirect a-b to a+(-b)
         return self.fAddWR(nodeA,neg_nodeB)
 
+
+
     # ---------------------------------------------------------------------------
     # Methods that handle rounding of the results
     # ---------------------------------------------------------------------------

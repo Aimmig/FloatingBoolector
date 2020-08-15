@@ -169,6 +169,14 @@ def test_fSqrt(const, precision, expected, fptype, rmode):
     fbtor, sort = _setup_(fptype, rmode)
     arithmeticTemplate(fbtor, sort, [const], expected, lambda x: fbtor.fSqrt(x, precision))
 
+@pytest.mark.parametrize('const,guard,roundb,sticky,expected,fptype,rmode', set_fRound)
+def test_fRound(const, guard, roundb, sticky, expected, fptype, rmode):
+    fbtor, sort = _setup_(fptype, rmode)
+    g = fbtor.Const(guard)
+    r = fbtor.Const(roundb)
+    s = fbtor.Const(sticky)
+    arithmeticTemplate(fbtor, sort, [const], expected, lambda x: fbtor.fRound(x, g, r, s))
+
 # ----------------------------------------------------------------------------------
 # Here the real test begin now: convert operators
 # ----------------------------------------------------------------------------------
