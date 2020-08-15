@@ -26,8 +26,8 @@ if __name__ == "__main__":
     fbtor.Assert(formula1)
     
     #manually exclude x1 or x2, if both are excluded formula becomes UNSAT
-    fbtor.Assert(fbtor.Not(fbtor.fEq(x,x1)))
-    fbtor.Assert(fbtor.Not(fbtor.fEq(x,x2)))
+    #fbtor.Assert(fbtor.Not(fbtor.fEq(x,x1)))
+    #fbtor.Assert(fbtor.Not(fbtor.fEq(x,x2)))
     
     result = fbtor.Sat()
     
@@ -70,10 +70,9 @@ if __name__ == "__main__":
     #fbtor.Assert(fbtor.fLt(x,x1))
     #fbtor.Assert(fbtor.And(fbtor.fGt(x,fbtor.fAdd(x1,eps)),fbtor.fLt(x,fbtor.fSub(x2,eps))))
     
-    # RESULT: TO-DO: noch etwas mehr schreiben .. TO-DO: noch etwas mehr schreiben ....
     # This examples shows, that our implementation is able to solve (simple) quadratic equation.
-    # The fact the IEE floating point numbers are not mathematically exact is also
-    
+    # The fact the IEE floating point numbers are not mathematically is also visible here, because
+    # there are some solutions that are only a small epsilon away from the expected solution.
     result = fbtor.Sat()
     
     if (result == fbtor.SAT):
