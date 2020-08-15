@@ -217,7 +217,7 @@ class FBoolector(Boolector,FBoolectorInterface):
     @returns: a new BoolectorBVNode that contains the same number as the input node
               interpreted as integer
     """
-    def Convert(self, width, node): #TODO special cases, rounding
+    def Convert(self, width, node):
         var = super().Var(super().BitVecSort(width))
         
         #real exponent without offset
@@ -992,7 +992,7 @@ class FBoolector(Boolector,FBoolectorInterface):
     @rtype: BoolectorVBNode
     @returns: TO-DO
     """
-    def fRound(self, node, guard, roundb, sticky): #TODO special cases
+    def fRound(self, node, guard, roundb, sticky):
         return super().Cond(
             self.fNaN(node),
             node,
