@@ -51,6 +51,7 @@ if __name__ == "__main__":
     result = fbtor.Sat()
     
     if result == fbtor.SAT:
+        print("Sat")
         print(sqrt.assignment)
         print(x.assignment)
     else:
