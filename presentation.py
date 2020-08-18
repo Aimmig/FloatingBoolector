@@ -21,7 +21,7 @@ if __name__ == "__main__":
     x = fbtor.fVar(fbtor.FloatSort())
     
     #"""
-    fbtor.Assert(fbtor.Eq(
+    fbtor.Assert(fbtor.fEq(
         fbtor.fMul(x, x),
         sqr))
     
