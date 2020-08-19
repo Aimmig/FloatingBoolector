@@ -12,10 +12,10 @@ if __name__ == "__main__":
     fbtor = FBoolector(fptype,rmode)
     fbtor.Set_opt(BTOR_OPT_MODEL_GEN, 1)
     
-    sqr = fbtor.fConst("100")
-    sqrt = fbtor.fConst("10")
-    #sqr = fbtor.fConst("2")
-    #sqrt = fbtor.fConst("1.4142136")
+    #sqr = fbtor.fConst("100")
+    #sqrt = fbtor.fConst("10")
+    sqr = fbtor.fConst("2")
+    sqrt = fbtor.fConst("1.4142136")
 
     
     x = fbtor.fVar(fbtor.FloatSort())
@@ -69,6 +69,9 @@ if __name__ == "__main__":
         
         result = fbtor.Sat()
         
+        print(sqrt1.assignment)
+        print(sqrt2.assignment)
+        print("---")
         print(sqr.assignment)
         print(x1.assignment)
         print(x2.assignment)
