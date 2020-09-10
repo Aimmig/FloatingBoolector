@@ -14,3 +14,4 @@
 __pycache__/*
 fbtor/__pycache__/
 fbtor/test/__pycache__/
+env/*

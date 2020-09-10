@@ -8,9 +8,8 @@ Zur Ausführung wird benötigt:
 - eine aktuelle Version von pyboolector (3.2.1)
 - zum Ausführen der Testfälle: eine aktuelle Version von pytest (5.4.3)
 
-Am einfachsten sind diese dependencies via pip zu installieren
-
-`pip install pyboolector pytest`
+Am einfachsten sind diese dependencies in einer neuen venv zu installieren mittels:
+pip install -r requirements.txt
 
 #########################################
 
