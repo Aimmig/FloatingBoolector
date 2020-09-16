@@ -37,3 +37,7 @@ entsprechend dokumentiert.
 
 Die Datei `quadratic_equation_test.py` beinhaltet ein kleines Bespielprogramm,
 das die Nullstellen einer Funktion berechnet.
+Die Datei `presenation.py` zeigt vergleicht zwei Möglichkeiten wie die Wurzel
+einer Zahl berechnet werden kann.
+Beide Beispielprogramme können mit `python -m examples/FILENAME` (ohne .py)
+ausgeführt werden.
