@@ -459,14 +459,15 @@ class FBoolector(Boolector,FBoolectorInterface):
         #Exponent difference
         eDiv = super().Sub(self.fExponent(nodeA), self.fExponent(nodeB))
         
-        abits = self.nextPower2(2 * self.fptype.value[MAN] + 5)
-        bits = abits - (2 * self.fptype.value[MAN] + 5)
+        baseBits = 2 * self.fptype.value[MAN] + 5
+        abits = self.nextPower2(baseBits)
+        bits = abits - (baseBits)
         
         #extended mantisse of nodeA and nodeB
         emanA = super().Concat(super().Const(0, 1), super().Concat(self.fMantisseIm(nodeA), super().Const(0, self.fptype.value[MAN] + 3)))
         emanBT = super().Cond(
             super().Ugte(eDiv, super().Const(abits, self.fptype.value[EXP])),
-            super().Const(0, 2 * self.fptype.value[MAN] + 5),
+            super().Const(0, baseBits),
             super().Slice(super().Srl(
                 super().Concat(
                     super().Const(0, bits),
@@ -484,11 +485,11 @@ class FBoolector(Boolector,FBoolectorInterface):
         
         emanB = super().Cond(
             super().And(rem, super().Xor(self.fSign(nodeA), self.fSign(nodeB))),
-            super().Add(emanBT, super().Const(1, 2 * self.fptype.value[MAN] + 5)),
+            super().Add(emanBT, super().Const(1, baseBits)),
             emanBT)
         
         #Extended mantisse of the result
-        man = super().Var(super().BitVecSort(2 * self.fptype.value[MAN] + 5))
+        man = super().Var(super().BitVecSort(baseBits))
         super().Assert(super().Eq(man, super().Cond(
             super().Xor(self.fSign(nodeA), self.fSign(nodeB)),
             super().Sub(emanA, emanB),
@@ -497,9 +498,9 @@ class FBoolector(Boolector,FBoolectorInterface):
         #index of the first one
         smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Cond(
-            super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 5), man),
+            super().Eq(super().Const(0, baseBits), man),
             super().Eq(super().Const(0, math.log(abits, 2)), smlog),
-            super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 5)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
+            super().Eq(super().Const(1, bits + (baseBits)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
         mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
         
         #extended Exponents
@@ -546,12 +547,12 @@ class FBoolector(Boolector,FBoolectorInterface):
         shman = super().Slice(super().Cond(
                 super().Ugte(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), super().Add(slog, undero)),
                 super().Sll(
-                    super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 5)), man),
+                    super().Concat(super().Const(0, smanbits - (baseBits)), man),
                     super().Sub(
                         super().Sub(super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2)), slog),
                         undero)),
                 super().Srl(
-                    super().Concat(super().Const(0, smanbits - (2 * self.fptype.value[MAN] + 5)), man),
+                    super().Concat(super().Const(0, smanbits - (baseBits)), man),
                     super().Sub(
                         super().Add(undero, slog),
                         super().Const(2 * self.fptype.value[MAN] + 4, math.log(smanbits, 2))))),
@@ -644,15 +645,16 @@ class FBoolector(Boolector,FBoolectorInterface):
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeA)),
             super().Concat(super().Const(0, self.fptype.value[MAN] + 2), self.fMantisseIm(nodeB)))))
         
-        abits = self.nextPower2(2 * self.fptype.value[MAN] + 3)
-        bits = abits - (2 * self.fptype.value[MAN] + 3)
+        baseBits = 2 * self.fptype.value[MAN] + 3
+        abits = self.nextPower2(baseBits)
+        bits = abits - (baseBits)
         
         #index of the highest bit of the mantisse
         smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Cond(
-            super().Eq(super().Const(0, 2 * self.fptype.value[MAN] + 3), man),
+            super().Eq(super().Const(0, baseBits), man),
             super().Eq(super().Const(0, math.log(abits, 2)), smlog),
-            super().Eq(super().Const(1, bits + (2 * self.fptype.value[MAN] + 3)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
+            super().Eq(super().Const(1, bits + (baseBits)), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
         mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
         
         #Extended exponents
@@ -786,13 +788,14 @@ class FBoolector(Boolector,FBoolectorInterface):
             super().Concat(self.fMantisseIm(nodeA), super().Const(0, 2 * self.fptype.value[MAN] + 3)),
             super().Concat(super().Const(0, 2 * self.fptype.value[MAN] + 3), self.fMantisseIm(nodeB)))))
         
-        abits = self.nextPower2(3 * self.fptype.value[MAN] + 4)
-        bits = abits - (3 * self.fptype.value[MAN] + 4)
+        baseBits = 3 * self.fptype.value[MAN] + 4
+        abits = self.nextPower2(baseBits)
+        bits = abits - (baseBits)
         
         #Index of the first one of the mantisse
         smlog = super().Var(super().BitVecSort(math.log(abits, 2)))
         super().Assert(super().Cond(
-            super().Eq(super().Const(0, 3 * self.fptype.value[MAN] + 4), man),
+            super().Eq(super().Const(0, baseBits), man),
             super().Eq(super().Const(0, math.log(abits, 2)), smlog),
             super().Eq(super().Const(1, abits), super().Srl(super().Concat(super().Const(0, bits), man), smlog))))
         mlog = super().Concat(super().Const(0, self.fptype.value[EXP] + 2 - math.log(abits, 2)), smlog)
